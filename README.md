@@ -13,7 +13,7 @@ Installation Instructions:
     Run 'g++ -fsanitize=address -fstack-usage -g jiffyedit.cpp -o Jiffyedit'
     The resulting file can be moved to anywhere you want, just remember the path.
     Add the path of the resulting file as an alias for 'jiffyedit' in your bash/zsh/fish config file, ex:
-      alias jiffyedit='/home/usr/Downloads/Jiffyedit'
+      alias jiffyedit='/home/user/Downloads/Jiffyedit'
     Alternatively, you could navigate directly to the path every time you want to use it.
     
     If want to use git clone and then enter the cloned folder on your PC, you can compile using the same command, then add it just like it says above.
@@ -33,6 +33,7 @@ Usage:
   Enter ? for help, if you need it.
   The command will be all one line, structured like this:
     (PATH OF FILE) -inpf sr sr-bf#
+    ex. "/home/user/Videos/MyVideo.mp4 sr sr-bf0.2 sr-db15 sr-mt1.0
     
     Where (PATH OF FILE) is the path of the video file you want to remove silence from.
     -inpf tells the program what the path is. You can use '' or "" if you want, but you don't have to.
