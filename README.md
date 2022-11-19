@@ -6,6 +6,7 @@ Also note: This is an extremely early version. Expect a few bugs and for things 
 Installation Instructions:
 
   Linux:
+  Video: https://odysee.com/@TOSkidout:d/jiffyedit-guide:6
   
     You must have GCC & FFmpeg installed.
     Download jiffyedit.cpp.
@@ -48,6 +49,7 @@ Usage:
 Known bugs and tips:
 
   Sometimes the very last clip will not be included in the MLT project file. If you need it, you can drag out from end of the last clip in Shotcut and edit it in manually.
+  Videos with decimal values for FPS will not work. Support will be added in a later update.
 
 
 For potential contributors:
