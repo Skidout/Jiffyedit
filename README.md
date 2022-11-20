@@ -6,6 +6,7 @@ Also note: This is an extremely early version. Expect a few bugs and for things 
 Installation Instructions:
 
   Linux:
+  If using Arch, simply run "sudo pacman -U" on the package (.pkg.tar.zst) and you can use jiffyedit by typing it into the terminal. The package should be getting added to the AUR soon.
   Video: https://odysee.com/@TOSkidout:d/jiffyedit-guide:6
   
     You must have GCC & FFmpeg installed.
