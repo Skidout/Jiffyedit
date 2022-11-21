@@ -10,13 +10,19 @@ Installation Instructions:
   Video: https://odysee.com/@TOSkidout:d/jiffyedit-guide:6
   
     You must have GCC & FFmpeg installed.
+    You do not need sudo permissions for the alternative installations.
     Download jiffyedit.cpp.
     Navigate to where you downloaded jiffyedit.cpp in the terminal.
-    Run 'g++ -fsanitize=address -fstack-usage -g jiffyedit.cpp -o Jiffyedit'
-    The resulting file can be moved to anywhere you want, just remember the path.
+    Run 'g++ -fsanitize=address -fstack-usage -g jiffyedit.cpp -o jiffyedit'
+    Run 'sudo install -D jiffyedit -t /usr/bin'
+    After that you can run it simply by typing jiffyedit in the terminal
+    
+    Alternatively:
     Add the path of the resulting file as an alias for 'jiffyedit' in your bash/zsh/fish config file, ex:
-      alias jiffyedit='/home/user/Downloads/Jiffyedit'
-    Alternatively, you could navigate directly to the path every time you want to use it.
+      alias jiffyedit='/home/user/programs/jiffyedit'
+      
+    Or you can simply navigate directly to the executable when you want to use it.
+    
     
     If want to use git clone and then enter the cloned folder on your PC, you can compile using the same command, then add it just like it says above.
   
@@ -57,3 +63,10 @@ For potential contributors:
 
   Keep in mind that this is a very early version of this software. I currently plan to almost completely restructure it to make it more versatile. If you want to contribute, you are of course welcome to, but your contribution may not make it into the next major version.
   I will also generally clean up the code as time goes on, but I don't suspect that there will be many updates to this early version before the restructuring.
+  
+Roadmap:
+ - Add support for decimal framerates.
+ - Fix bugs.
+ - Restructure the program.
+ - Add support for auto filters.
+ - Add support for Kdenlive.
