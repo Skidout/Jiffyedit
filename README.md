@@ -7,7 +7,6 @@ Installation Instructions:
 
   Linux:
   If using Arch, simply run "sudo pacman -U" on the package (.pkg.tar.zst) and you can use jiffyedit by typing it into the terminal. The package should be getting added to the AUR soon.
-  Video: https://odysee.com/@TOSkidout:d/jiffyedit-guide:6
   
     You must have GCC & FFmpeg installed.
     You do not need sudo permissions for the alternative installations.
@@ -20,6 +19,7 @@ Installation Instructions:
     Alternatively:
     Add the path of the resulting file as an alias for 'jiffyedit' in your bash/zsh/fish config file, ex:
       alias jiffyedit='/home/user/programs/jiffyedit'
+      Video: https://odysee.com/@TOSkidout:d/jiffyedit-guide:6
       
     Or you can simply navigate directly to the executable when you want to use it.
     
@@ -56,7 +56,6 @@ Usage:
 Known bugs and tips:
 
   Sometimes the very last clip will not be included in the MLT project file. If you need it, you can drag out from end of the last clip in Shotcut and edit it in manually.
-  Videos with decimal values for FPS will not work. Support will be added in a later update.
 
 
 For potential contributors:
@@ -65,8 +64,8 @@ For potential contributors:
   I will also generally clean up the code as time goes on, but I don't suspect that there will be many updates to this early version before the restructuring.
   
 Roadmap:
- - Add support for decimal framerates.
  - Fix bugs.
  - Restructure the program.
+ - Add support for longer videos.
  - Add support for auto filters.
  - Add support for Kdenlive.
