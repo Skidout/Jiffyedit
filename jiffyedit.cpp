@@ -485,7 +485,7 @@ int main() {primary();}
 
 void primary() {
 	
-	cout << "Welcome to JiffyEdit V1.0.0-0. Enter [?] for help." << endl;
+	cout << "Welcome to JiffyEdit V1.0.1-1. Enter [?] for help." << endl;
 	cout << ">>: ";
 	
 	getline(cin, in); // need to use getline for parsing input. cin >> doesnt work well enough for this
