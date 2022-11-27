@@ -1,7 +1,7 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit-cli
-pkgver=1.0.1.1
+pkgver=1.0.1.2
 pkgrel=1
 pkgdesc="Automatically edit videos to MLT project file for Shotcut."
 arch=(x86_64)
