@@ -41,7 +41,9 @@ Usage:
   Enter ? for help, if you need it.
   The command will be all one line, structured like this:
     (PATH OF FILE) -inpf sr sr-bf#
-    ex. "/home/user/Videos/MyVideo.mp4 sr sr-bf0.2 sr-db15 sr-mt1.0
+    ex. /home/user/Videos/MyVideo.mp4 -inpf sr sr-bf0.2 sr-db15 sr-mt1.0
+    or "/home/user/Videos/MyVideo.mp4" -inpf sr sr-bf0.2 sr-db15 sr-mt1.0
+    or '/home/user/Videos/MyVideo.mp4' -inpf sr sr-bf0.2 sr-db15 sr-mt1.0
     
     Where (PATH OF FILE) is the path of the video file you want to remove silence from.
     -inpf tells the program what the path is. You can use '' or "" if you want, but you don't have to.
@@ -69,3 +71,6 @@ Roadmap:
  - Add support for longer videos.
  - Add support for auto filters.
  - Add support for Kdenlive.
+ 
+Todo:
+  Learn this .md markup format so I can make this page look better.
