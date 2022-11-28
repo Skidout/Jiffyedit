@@ -485,7 +485,7 @@ int main() {primary();}
 
 void primary() {
 	
-	cout << "Welcome to JiffyEdit V1.0.1-1. Enter [?] for help." << endl;
+	cout << "Welcome to JiffyEdit V1.0.1-2. Enter [?] for help." << endl;
 	cout << ">>: ";
 	
 	getline(cin, in); // need to use getline for parsing input. cin >> doesnt work well enough for this
@@ -719,18 +719,16 @@ void shotcut() {
 	}
 	
 	if (silarr[count5] != secdur) { // if the last silence end is less than the dur, make the dur the end of the final clip. if not, the silence end is junk and wont be used.
-		
 		silarr[count2] = secdur; count5++;
-		cout << endl << silarr[count2] << endl;
 	}
 	
 	silcnt = count5;
 	count5 = 0;
-	
+	/*
 	for (count2 = 0; count2 < silcnt; count2++) {
 		cout << endl << "silarr: " << silarr[count2] << endl;
 	}
-	
+	*/
 	for (count2 = 0; count2 < silcnt; count2 = count2 + 2) { // sort the clips by the their duration
 		temp = count2 + 1; // tempf2 is the clip ends
 		tempf = silarr[temp] - silarr[count2]; // find the clip dur
@@ -742,11 +740,11 @@ void shotcut() {
 	
 	silcnt = count5;
 	count5 = 0;
-	
+	/*
 	for (count2 = 0; count2 < silcnt; count2++) {
 		cout << endl << "tempsil: " << tempsil[count2] << endl;
 		}
-	
+	*/
 	if (tempsil[0] < buff) { // beginning endian for adding the buffer
 		silarr[0] = 0.0; count5++;
 		silarr[1] = tempsil[1] + buff; count5++;
@@ -763,11 +761,11 @@ void shotcut() {
 	if (secdur - silarr[temp] < 0.0) {
 		silarr[temp] = secdur;
 	}
-
+/*
 	for (count2 = 0; count2 < silcnt; count2++) {
 		cout << endl << "silarr: " << silarr[count2] << endl;
 	}
-
+*/
 	
 	cout << "Generating MLT XML file..." << endl;
 	
