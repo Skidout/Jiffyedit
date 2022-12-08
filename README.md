@@ -6,7 +6,7 @@ Also note: This is an extremely early version. Expect a few bugs and for things 
 Installation Instructions:
 
   Linux:
-  If using Arch, simply run "sudo pacman -U" on the package (.pkg.tar.zst) and you can use jiffyedit by typing it into the terminal. The package should be getting added to the AUR soon.
+  If using Arch, you can download the PKGBUILD file, run makepkg (you need base-devel), then run "sudo pacman -U" on the resulting package (.pkg.tar.zst) and you can use jiffyedit by typing it into the terminal. The package should be getting added to the AUR soon.
   
     You must have GCC & FFmpeg installed.
     You do not need sudo permissions for the alternative installations.
@@ -57,8 +57,7 @@ Usage:
 
 Known bugs and tips:
 
-  Sometimes the very last clip will not be included in the MLT project file. If you need it, you can drag out from end of the last clip in Shotcut and edit it in manually.
-
+  If a part of the video is cut out that you want to inculde, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
 
 For potential contributors:
 
@@ -74,3 +73,7 @@ Roadmap:
  
 Todo:
   Learn this .md markup format so I can make this page look better.
+
+About the restructuring:
+
+  Even though nothing is yet finalized, I want to write a little bit about what the new, restructured Jiffyedit will look like. When the first restructured version is released, you will be able to create your own programs that return the timestamps of the clips to include. These are called clippers. They will be their own program entirely, meaning you can make a clipper plugin in any language you want, as long as it can accept arguments and be called from shell.
