@@ -1,0 +1,8 @@
+clipper
+Silence Remover
+jiffyedit-sr
+[sr]
+bf# - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Must be a decimal number Default 0.3s.
+mt# - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips Must be a decimal Default 0.5s.
+db# - Audio level for when silence ends and clips begin. Must NOT be a decimal. Default -20dB.
+[sr], [sr bf0.5 mt1.0 db25 ]
