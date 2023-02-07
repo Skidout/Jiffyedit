@@ -1,7 +1,0 @@
-# ignore all pkg.tar.zst (Arch Linux Package) files
-* pkg.tar.zst
-* .tar.zst
-* .zst
-
-# ignore the PKGBUILD
-/PKGBUILD
