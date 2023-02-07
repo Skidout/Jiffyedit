@@ -1,0 +1,36 @@
+#!/bin/sh
+# Linux only
+a=$PWD
+
+b=~
+
+path=$1
+
+exe="/usr/lib/jiffyedit/jiffyedit"
+
+if [ ${path:0:1} == '?' ]; then
+	path=$(echo "$path" | sed 's/^.//')
+	"$exe" ?
+	exit 0
+fi
+
+c=$*
+
+c="${c//$path/}"
+
+d=${c:0:1}
+
+if [ "${path:0:2}" == './' ]; then
+	path=$(echo "$path" | sed 's/^.//')
+	"$exe" "\"$a$path\""$c
+	exit 0
+elif [ "${path:0:2}" == '~/' ]; then
+	path=$(echo "$path" | sed 's/^.//')
+	"$exe" "\"$a$path\""$c
+	exit 0
+elif [ "${path:0:1}" == '/' ]; then
+	"$exe" "\"$path\""$c
+	exit 0
+fi
+
+"$exe" "\"$a/$path\""$c
