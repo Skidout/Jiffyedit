@@ -6,7 +6,9 @@ b=~
 
 path=$1
 
-exe="/usr/lib/jiffyedit/jiffyedit"
+cd "/usr/lib/jiffyedit"
+
+exe="./jiffyedit"
 
 if [ ${path:0:1} == '?' ]; then
 	path=$(echo "$path" | sed 's/^.//')

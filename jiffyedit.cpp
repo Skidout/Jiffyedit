@@ -320,14 +320,12 @@ void reader() {
 
 	getfps >> fpsnum >> fpsden;
 	
-	
 	string cmd4 = "\""; // take clips in
 	temps = fs::current_path().generic_string();
 	cmd4.append(temps); cmd4.append("/");
 	cmd4.append(clipls.at(clpint).exe);
 	cmd4.append("\" \"PATH\"");
 	sprstr = cmd4; substr = "PATH"; repstr = path; cmd4 = replace();
-	cout << clpint;
 	cmd4.append(" ");
 	cmd4.append(clipls.at(clpint).args);
 	
@@ -538,17 +536,14 @@ int main(long long int argc, char * argv[]) {
 				temps = argv[count2];
 				temps2 = temps;
 				temps2.append("]"); // temps2 becomes the string used to check the call.
-				cout << "LSDKJ " << temps << endl;
 				tempc = temps[temps.size() - 1];
 				if (not(tempc == ']')) {
 					for (count3 = count2 + 1; count3 < argc; count3++) {
 						temps = argv[count3];
-						cout << "LSDKJ " << temps << endl;
 						tempc = temps[0];
 						if (not(tempc == ']')) {
 							tempargs.append(argv[count3]);
 							tempargs.append(" ");
-							cout << tempargs << endl << endl;
 						} else {break;}
 					}
 				}
@@ -556,15 +551,12 @@ int main(long long int argc, char * argv[]) {
 				for (count5 = 0; count5 < clipls.size(); count5++) {
 					if (fclipr) {break;}
 					pos = -1;
-					cout << tempargs << endl << endl;
 					pos = clipls.at(count5).call.find(temps2);
-					cout << "LSDKJ " << temps << endl;
 				//	ismeta = clipls.at(count5).call.find(temps); /// finding the resolution and other metadata will be much easier with ffprobe, so that will happen in a later version
 				//	boool = ismeta.compare("npos");
 					if (pos == 0) {
 						clpint = count5;
 						fclipr = true;
-						cout << tempargs << endl << endl;
 						clipls.at(clpint).args = tempargs;
 						
 					}
@@ -594,7 +586,7 @@ void primary() {
 				cout << clipls.at(count6).help.at(count2) << endl;
 			}
 		}
-		cout << "Program aborted by help." << endl;
+
 		exit(0);
 	} else {
 
@@ -615,8 +607,6 @@ void primary() {
 			path.erase(0, 1);
 		}
 		reverse(path.begin(), path.end());
-
-		cout << path << endl;
 
 		// so this here is also terribly documented online. i will explain this in detail as well.
 		// look up top for namespace stuff
