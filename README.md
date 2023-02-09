@@ -13,9 +13,9 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   Navigate to where you downloaded the files in the terminal.
   
     sudo install -D jiffyedit -t /usr/bin
-    g++ -fsanitize=address -fstack-usage -g jiffyedit.cpp -o jiffyedit
+    g++ -fsanitize=address -fstack-usage -g jiffyedit-master.cpp -o jiffyedit-master
     g++ -fsanitize=address -fstack-usage -g jiffyedit-sr.cpp -o jiffyedit-sr
-    sudo install -D jiffyedit -t /usr/lib/jiffyedit
+    sudo install -D jiffyedit-master -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr.dat -t /usr/lib/jiffyedit
       
