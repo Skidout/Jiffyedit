@@ -321,8 +321,6 @@ void reader() {
 	getfps >> fpsnum >> fpsden;
 	
 	string cmd4 = "\""; // take clips in
-	temps = fs::current_path().generic_string();
-	cmd4.append(temps); cmd4.append("/");
 	cmd4.append(clipls.at(clpint).exe);
 	cmd4.append("\" \"PATH\"");
 	sprstr = cmd4; substr = "PATH"; repstr = path; cmd4 = replace();
@@ -392,6 +390,7 @@ void reader() {
 
 	if (clparr.size() == 0) {
 		cout << "Fatal error: No clips from clipper: " << clipls.at(clpint).name << " with call: " << clipls.at(clpint).call << endl;
+		exit(6);
 	}
 
 	int wid = stoi(width);
@@ -422,7 +421,7 @@ void reader() {
 
 void primary();
 
-int main(long long int argc, char * argv[]) {
+int main(int argc, char * argv[]) {
 
 	vector <string> ls; 
 	stringstream getls; 
