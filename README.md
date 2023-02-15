@@ -58,11 +58,11 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
 
 ### Known bugs and tips:
 
-  If a part of the video is cut out that you want to inculde, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
+  If a part of the video is cut out that you want to include, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
  - Fix bugs.
- - Add support for Kdenlive.
+ - Add support for Pitivi.
  - Add support for auto filters.
 
 ### For potential contributors:
