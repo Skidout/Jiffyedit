@@ -17,6 +17,7 @@ char tempc;
 long long int len, temp, count2, count3, count5;
 long long int pos = -1;
 bool hasjob = false; // stops execution in case the user has entered a command with nothing to do
+bool tempb;
 float buff = 0.3;
 float mclip = 0.5;
 vector <float> silarr;
@@ -64,7 +65,7 @@ void reader() {
 
 	/// inmeta is for getting the silences
 	
-	bool tempb = false;
+	tempb = false;
 	// pipes in c++ seem to be horribly documented, so i'll do my best to explain it here. if i say i think something, it means im not entirely sure what exactly it does, so this is just my best guess from what little legible code and documentation i have been able to find
 	
 	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from fstream would probably work, but i'm following their advice, just to be safe.
@@ -278,7 +279,6 @@ void primary() {
 	wrtcmd << cmd << decbels << "dB:d=0.03 -f null - 2>&1"; // not sure if the d= option actually does anything here, but it is supposed to be the precision with which it searches for silence. Since it seems to work fine like this i'll leave it for now.
 	cmd = wrtcmd.str();
 
-	// system("ffmpeg -i audiotest.mp4 -hide_banner -af silencedetect=noise=-15dB:d=0.03 -f null - > output.txt 2>&1"); // ffmpeg command must be formed with string, this is for test purposes only (change it later)
 	reader();
 	
 }
@@ -290,6 +290,7 @@ void sorter() {
 		cout << "Fatal error: Duration not found.";
 		exit(3);
 	}
+	
 	
 	count5 = 0;
 	buffx2 = buff * 2.0;
@@ -320,7 +321,7 @@ void sorter() {
 	}
 	
 	if (silarr.at(count5) != secdur) { // if the last silence end is less than the dur, make the dur the end of the final clip. if not, the silence end is junk and wont be used.
-		silarr.at(count2) = secdur; count5++;
+		silarr.at(count2) = secdur; count5++; tempb = true; 
 	}
 	
 	for (count2 = silarr.size() + 1; count2 > count5 + 2; count2--) { // loop to remove excess data from silarr
@@ -328,15 +329,18 @@ void sorter() {
 	}
 	
 	
+	count3 = 0;
+	if (not(tempb)) {count3++; count3++;}
 	count5 = 0;
 
-	for (count2 = 0; count2 < silarr.size(); count2 = count2 + 2) { // sort the clips by the their duration
+	for (count2 = 0; count2 < silarr.size() - count3; count2 = count2 + 2) { // sort the clips by the their duration
 		temp = count2 + 1; 
 		
 		tempf = silarr.at(temp) - silarr.at(count2); // find the clip dur
 		if (tempf > mclip) {
 			tempsil.at(count5) = silarr.at(count2); count5++;
 			tempsil.at(count5) = silarr.at(temp); count5++;
+			
 		}
 	}
 	
@@ -344,7 +348,6 @@ void sorter() {
 		tempsil.pop_back();
 	}
 	
-
 	count5 = 0;
 
 	if (tempsil.at(0) < buff) { // beginning thing for adding the buffer
@@ -385,4 +388,4 @@ void sorter() {
 	
 	exit(0);
 }
-// end of the writer file
+

@@ -18,7 +18,7 @@ bool hasres = false;
 bool fheight = false; // found height indicator
 bool fwidth = false;
 bool fclsp = false;
-bool tempb, tempb2;
+bool tempb;
 char tempc;
 unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, count6, count2, count3, count5, len, clpint; // clipper int
 long long int pos = -1;
@@ -321,6 +321,8 @@ void reader() {
 	getfps >> fpsnum >> fpsden;
 	
 	string cmd4 = "\""; // take clips in
+	clipls.at(clpint).exe.insert(0, "/");
+	clipls.at(clpint).exe.insert(0, fs::current_path().generic_string());
 	cmd4.append(clipls.at(clpint).exe);
 	cmd4.append("\" \"PATH\"");
 	sprstr = cmd4; substr = "PATH"; repstr = path; cmd4 = replace();
@@ -339,10 +341,11 @@ void reader() {
 	if ((inclps = popen(realcmd4, "r")) != NULL) {
 
 		while (fgets(buf, 1024, inclps) != NULL) {
-			tempb2 = true;
 			temps = buf;
 			pos = -1;
 			pos = temps.find("clipstart: ");
+			temp = temps.find("clipend: ");
+			count6 = temps.find("Fatal error:");
 			if (pos == 0) {
 				if (tempb == true) {
 					cout << endl << "Fatal error: Two clipstarts before clipend from clipper: " << clipls.at(clpint).name << endl;
@@ -355,11 +358,7 @@ void reader() {
 				
 				clparr.push_back(tempf);
 				tempb = true;
-				tempb2 = false; // tempb2 here represents whether or not this is meant to be a message passed to the user.
-			}
-			
-			pos = temps.find("clipend: ");
-			if (pos == 0) {
+			} else if (temp == 0) {
 				if (tempb == false) {
 					cout << endl << "Fatal error: Two clipends before clipstart from clipper: " << clipls.at(clpint).name << endl;
 					exit(6);
@@ -371,13 +370,11 @@ void reader() {
 				
 				clparr.push_back(tempf);
 				tempb = false;
-				tempb2 = false;
-			}
-			
-			pos = temps.find("Fatal error:");
-			if (pos == 0 and tempb2) {
+			} else if (count6 == 0) {
 				cout << endl << temps << " (from clipper: " << clipls.at(clpint).name << " with call: " << clipls.at(clpint).call << ")" << endl;
 				exit(6);
+			} else {
+				cout << temps << endl;
 			}
 		}
 		if (tempb) {
@@ -512,9 +509,7 @@ int main(int argc, char * argv[]) {
 				iter++;
 			}
 			clipls.erase(iter);
-		} else {
-			clipls.at(count6).exe = temps;
-		}
+		} 
 	}
 	
 	if (argc > 0) {
