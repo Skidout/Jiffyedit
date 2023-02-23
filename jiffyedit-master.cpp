@@ -1,28 +1,20 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <fstream> // other includes inside common.hpp
 #include <algorithm>
-#include <sstream>
-#include <stdio.h>
-#include <iomanip>
-#include <cstring>
 #include <filesystem>
-#include <vector>
+
+#include "common.hpp"
 
 using namespace std;
 namespace fs = std::filesystem; // this sets it so that you can use fs:: instead of filesystem::
 
-long long int boool, /* int used to check whether string contains substring */ temp;
-string metaline, /* audio channels */ path, outpath, ismeta, cmd, totlen, metaline2, width, height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei, var1, temps, temps2;
+long long int boool /* int used to check whether string contains substring */;
+string outpath, ismeta, totlen, width, height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei, temps2;
 bool hasres = false;
 bool fheight = false; // found height indicator
 bool fwidth = false;
 bool fclsp = false;
-bool tempb;
-char tempc;
-unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, count6, count2, count3, count5, len, clpint; // clipper int
-long long int pos = -1;
-float tempf, secdur, /* total length of the video in seconds */  tempf2, countf, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
+unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, count6, len, clpint; // clipper int
+float tempf2, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
 vector <float> clparr; // timestamps where 0 is begin, 1 is end, 2 is begin and so on
 
 class clipper {
@@ -39,38 +31,6 @@ vector <clipper> clipls;
 void primary();
 void shotcut();
 
-string sprstr;
-string substr;
-string repstr;
-string in;
-
-string replace() {
-	pos = -1;
-	pos = sprstr.find(substr);
-	if (pos < 0) {
-		cout << "Fatal error: Substring to replace not found. Please report, send video and command if you can.";
-		exit(2);
-	}
-	temp = size(substr);
-	sprstr.erase(pos, size(substr));
-	sprstr.insert(pos, repstr);
-	return sprstr;
-}
-
-bool isnum() {
-	char comp = metaline[temp]; // character to compare
-	if (comp == '0') {return true;}
-	else if (comp == '1') {return true;}
-	else if (comp == '2') {return true;}
-	else if (comp == '3') {return true;}
-	else if (comp == '4') {return true;}
-	else if (comp == '5') {return true;}
-	else if (comp == '6') {return true;}
-	else if (comp == '7') {return true;}
-	else if (comp == '8') {return true;}
-	else if (comp == '9') {return true;}
-	else {return false;}
-}
 
 float tofrmvar;
 
@@ -92,44 +52,42 @@ float tonrfram() { // to nearest valid frame. shotcut needs timestamps to be fra
 	}
 }
 
-float totimvar;
-
-string toanatim() { // to analogue time
+string toanatim(float totimvar, int precision) { // to analogue time
 
 	string result;
 	int hrs = 0;
 	int mins = 0;
 	float secs = 0.0;
-	countf = 0.0;
-	tempf = totimvar;
-	while (tempf >= 1.0) { // find the stuff after the .
-		tempf = tempf - 1.0;
+	float timecount = 0.0;
+	float postdot = totimvar;
+	while (postdot >= 1.0) { // find the stuff after the .
+		postdot = postdot - 1.0;
 	}
-	totimvar = totimvar - tempf; // totimvar is the stuff before the .
+	totimvar = totimvar - postdot; // totimvar is the stuff before the .
 	if (totimvar >= 3600.0) { // if totimvar is longer than 1 hour
-		tempf2 = totimvar / 3600.0; // convert to hours
-		while (tempf2 >= 1.0) { // find how many hours there are
-			tempf2 = tempf2 - 1.0;
+		float hours = totimvar / 3600.0; // convert to hours
+		while (hours >= 1.0) { // find how many hours there are
+			hours = hours - 1.0;
 			hrs++;
-			countf = countf + 1.0;
+			timecount = timecount + 1.0;
 		}
 	}
-	totimvar = totimvar - 3600.0 * countf; // subtract the hours, if any
+	totimvar = totimvar - 3600.0 * timecount; // subtract the hours, if any
 
 	if (totimvar >= 60.0) { // if totimvar is longer than 1 minute
-	 	tempf2 = totimvar / 60.0; // convert to minutes
-	 	countf = 0.0;
-	 	while (tempf2 >= 1.0) { // find how many minutes there are
-			tempf2 = tempf2 - 1.0;
+	 	float minutes = totimvar / 60.0; // convert to minutes
+	 	timecount = 0.0;
+	 	while (minutes >= 1.0) { // find how many minutes there are
+			minutes = minutes - 1.0;
 			mins++;
-			countf = countf + 1.0;
+			timecount = timecount + 1.0;
 
 		}
 
 	}
-	totimvar = totimvar - 60.0 * countf; // subtract the minutes, if any
+	totimvar = totimvar - 60.0 * timecount; // subtract the minutes, if any
 
-	secs = totimvar + tempf;
+	secs = totimvar + postdot;
 
 	if (hrs < 10) {
 		result = "0";
@@ -151,7 +109,7 @@ string toanatim() { // to analogue time
 
 	}
 	
-	wrttim << fixed << setprecision(3) << secs;
+	wrttim << fixed << setprecision(precision) << secs;
 
 	getline(wrttim, result);
 
@@ -268,11 +226,9 @@ void reader() {
 
 	}
 
-
-
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 
-	sprstr = cmd2; substr = "PATH"; repstr = path; cmd2 = replace();
+	cmd2 = replace(cmd2, "PATH", path);
 
 	char * getcmd2 = new char[cmd2.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here
 	strcpy(getcmd2, cmd2.c_str());
@@ -297,7 +253,7 @@ void reader() {
 
 	string cmd3 = "ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"PATH\""; // fetch fps
 
-	sprstr = cmd3; substr = "PATH"; repstr = path; cmd3 = replace();
+	cmd3 = replace(cmd3, "PATH", path);
 
 	char * getcmd3 = new char[cmd3.length() + 1]; // the string converted to a const char * for the pipe funtion. this is done here
 	strcpy(getcmd3, cmd3.c_str());
@@ -314,7 +270,7 @@ void reader() {
 		infps = NULL;
 	}
 
-	sprstr = temps; substr = "/"; repstr = " "; temps = replace();
+	temps = replace(temps, "/", " ");
 
 	stringstream getfps(temps);
 
@@ -325,10 +281,9 @@ void reader() {
 	clipls.at(clpint).exe.insert(0, fs::current_path().generic_string());
 	cmd4.append(clipls.at(clpint).exe);
 	cmd4.append("\" \"PATH\"");
-	sprstr = cmd4; substr = "PATH"; repstr = path; cmd4 = replace();
+	cmd4 = replace(cmd4, "PATH", path);
 	cmd4.append(" ");
 	cmd4.append(clipls.at(clpint).args);
-	
 
 	char * getcmd4 = new char[cmd4.length() + 1]; // the string converted to a const char * for the pipe funtion. this is done here
 	strcpy(getcmd4, cmd4.c_str());
@@ -546,8 +501,7 @@ int main(int argc, char * argv[]) {
 					if (fclipr) {break;}
 					pos = -1;
 					pos = clipls.at(count5).call.find(temps2);
-				//	ismeta = clipls.at(count5).call.find(temps); /// finding the resolution and other metadata will be much easier with ffprobe, so that will happen in a later version
-				//	boool = ismeta.compare("npos");
+
 					if (pos == 0) {
 						clpint = count5;
 						fclipr = true;
@@ -671,29 +625,17 @@ void shotcut() {
 	fin.push_back("<?xml version=\"1.0\" standalone=\"no\"?>"); // All strings put directly into the output do not seem to change regardless of the video in question.
 	fin.push_back("<mlt LC_NUMERIC=\"C\" version=\"7.8.0\" title=\"Shotcut version 22.09.23\" producer=\"main_bin\">");
 
-	var1 = "  <profile description=\"automatic\" width=\"WIDTH\" height=\"HEIGHT\" progressive=\"1\" sample_aspect_num=\"1\" sample_aspect_den=\"1\" display_aspect_num=\"ASPWID\" display_aspect_den=\"ASPHEI\" frame_rate_num=\"FPSNUM\" frame_rate_den=\"FPSDEN\" colorspace=\"CLSPC\"/>";
+	temps = "  <profile description=\"automatic\" width=\"WIDTH\" height=\"HEIGHT\" progressive=\"1\" sample_aspect_num=\"1\" sample_aspect_den=\"1\" display_aspect_num=\"ASPWID\" display_aspect_den=\"ASPHEI\" frame_rate_num=\"FPSNUM\" frame_rate_den=\"FPSDEN\" colorspace=\"CLSPC\"/>";
 
-	stringstream wrtnum;
+	temps = replace(temps, "WIDTH", width);
+	temps = replace(temps, "HEIGHT", height);
+	temps = replace(temps, "ASPWID", aspwid);
+	temps = replace(temps, "ASPHEI", asphei);
+	temps = replace(temps, "FPSNUM", to_string(fpsnum));
+	temps = replace(temps, "FPSDEN", to_string(fpsden));
+	temps = replace(temps, "CLSPC", clspc);
 
-	wrtnum << fpsnum;
-
-	getline(wrtnum, temps);
-
-	stringstream wrtden;
-
-	wrtden << fpsden;
-
-	getline(wrtden, temps2);
-
-	sprstr = var1; substr = "WIDTH"; repstr = width; var1 = replace();
-	sprstr = var1; substr = "HEIGHT"; repstr = height; var1 = replace();
-	sprstr = var1; substr = "ASPWID"; repstr = aspwid; var1 = replace();
-	sprstr = var1; substr = "ASPHEI"; repstr = asphei; var1 = replace();
-	sprstr = var1; substr = "FPSNUM"; repstr = temps; var1 = replace();
-	sprstr = var1; substr = "FPSDEN"; repstr = temps2; var1 = replace();
-	sprstr = var1; substr = "CLSPC"; repstr = clspc; var1 = replace();
-
-	fin.push_back(var1);
+	fin.push_back(temps);
 
 	fin.push_back("  <playlist id=\"main_bin\">");
 	fin.push_back("    <property name=\"xml_retain\">1</property>");
@@ -706,34 +648,30 @@ void shotcut() {
 	playlist.push_back("    <property name=\"shotcut:name\">V1</property>");
 
 
-	totimvar = secdur; dur = toanatim();
-	totimvar = secdur - onefrm; durm1 = toanatim();
+	dur = toanatim(secdur, 3);
+	durm1 = toanatim(secdur - onefrm, 3);
 
 	float prolenm1 = 0.0; // project length minus 1 frame
 	float prolen = 0.0; // total project length
 
-
-
 	count2 = 0;
 
 	for (count6 = 0; count6 < clparr.size(); count6 = count6 + 2) {
-		repstr = "chain";
-		repstr.append(to_string(count2));
 
-		string cnum = repstr; // chain num
+		string cnum = "chain"; // chain num
+		cnum.append(to_string(count2));
 
-		string var4 = "  <chain id=\"CHAIN\" out=\"DURM1\">";  // here the chain id gets replaced and then the durations after it on both strings
-		sprstr = var4; substr = "CHAIN"; repstr = cnum; var4 = replace();
+		temps2 = "  <chain id=\"CHAIN\" out=\"DURM1\">";  // here the chain id gets replaced and then the durations after it on both strings
+		temps2 = replace(temps2, "CHAIN", cnum);
+		out.push_back(replace(temps2, "DURM1", durm1));
 
 			temps = "    <entry producer=\"CHAIN\" in=\"IN\" out=\"OUT\"/>";  // everything that is indented here is to do with the playlist, just to make things clearer
-			sprstr = temps; temps = replace();
-
-		sprstr = var4; substr = "DURM1"; repstr = durm1; out.push_back(replace());
+			temps = replace(temps, "CHAIN", cnum);
 
 			temp = count6 + 1; // need this line a few times because this variable is getting reassigned in some other function
-			sprstr = temps; substr = "IN"; totimvar = clparr.at(count6); repstr = toanatim(); temps = replace(); // replace "IN" with the beginning of the clip
+			temps = replace(temps, "IN", toanatim(clparr.at(count6), 3)); // replace "IN" with the beginning of the clip
 			temp = count6 + 1;
-			sprstr = temps; substr = "OUT"; totimvar = clparr.at(temp); repstr = toanatim(); playlist.push_back(replace()); // replace "OUT" witht the end of the clip
+			playlist.push_back(replace(temps, "OUT", toanatim(clparr.at(temp), 3))); // replace "OUT" with the end of the clip
 
 			temp = count6 + 1;
 
@@ -742,14 +680,12 @@ void shotcut() {
 			prolen = prolen + tempf; // add the duration of the clip to the aggregate project length
 
 		temps = "    <property name=\"length\">DUR</property>";
-		sprstr = temps; substr = "DUR"; repstr = dur; out.push_back(replace());
+		out.push_back(replace(temps, "DUR", dur));
 
 		out.push_back("    <property name=\"eof\">pause</property>");
 
 		temps = "    <property name=\"resource\">PATH</property>";
-		sprstr = temps; substr = "PATH"; repstr = path; temps = replace();
-
-		out.push_back(temps);
+		out.push_back(replace(temps, "PATH", path));
 
 		out.push_back("    <property name=\"mlt_service\">avformat-novalidate</property>");
 		out.push_back("    <property name=\"seekable\">1</property>");
@@ -759,10 +695,7 @@ void shotcut() {
 		out.push_back("    <property name=\"ignore_points\">0</property>");
 
 		temps = "    <property name=\"shotcut:caption\">PATH</property>";
-
-		sprstr = temps; substr = "PATH"; repstr = path; temps = replace();
-
-		out.push_back(temps);
+		out.push_back(replace(temps, "PATH", path));
 
 		out.push_back("    <property name=\"xml\">was here</property>");
 		out.push_back("  </chain>");
@@ -779,7 +712,7 @@ void shotcut() {
 	out.push_back("  </playlist>");
 
 	temps = "  <tractor id=\"tractor0\" title=\"Shotcut version 22.09.23\" in=\"00:00:00.000\" out=\"TOTLENM1\">";
-	sprstr = temps; substr = "TOTLENM1"; totimvar = prolenm1; repstr = toanatim(); out.push_back(replace());
+	out.push_back(replace(temps, "TOTLENM1", toanatim(prolenm1, 3)));
 
 	out.push_back("    <property name=\"shotcut\">1</property>");
 	out.push_back("    <property name=\"shotcut:projectAudioChannels\">2</property>");
@@ -804,17 +737,11 @@ void shotcut() {
 	out.push_back("  </tractor>");
 	out.push_back("</mlt>");
 
+	temps = "  <producer id=\"black\" in=\"00:00:00.000\" out=\"TOTLENM1\">"; // TOTLENM1 has to be the total length of project
+	fin.push_back(replace(temps, "TOTLENM1", toanatim(prolenm1, 3)));
 
-
-	string var2 = "  <producer id=\"black\" in=\"00:00:00.000\" out=\"TOTLENM1\">"; // TOTLENM1 has to be the total length of project
-	sprstr = var2; substr = "TOTLENM1"; totimvar = prolenm1; repstr = toanatim(); var2 = replace();
-
-	fin.push_back(var2);
-
-	string var3 = "    <property name=\"length\">TOTLEN</property>"; //  This appears to be the last frame of the project approximated to the thousandth.
-	sprstr = var3; substr = "TOTLEN"; totimvar = prolen; repstr = toanatim(); var3 = replace();
-
-	fin.push_back(var3);
+	temps = "    <property name=\"length\">TOTLEN</property>"; //  This appears to be the last frame of the project approximated to the thousandth.
+	fin.push_back(replace(temps, "TOTLEN", toanatim(prolen, 3)));
 
 	fin.push_back("    <property name=\"eof\">pause</property>");
 	fin.push_back("    <property name=\"resource\">0</property>");
@@ -826,8 +753,7 @@ void shotcut() {
 	fin.push_back("  <playlist id=\"background\">");
 
 	temps = "    <entry producer=\"black\" in=\"00:00:00.000\" out=\"TOTLENM1\"/>";
-	sprstr = temps; substr = "TOTLENM1"; totimvar = prolenm1; repstr = toanatim(); temps = replace();
-	fin.push_back(temps);
+	fin.push_back(replace(temps, "TOTLENM1", toanatim(prolenm1, 3)));
 
 	for (count2 = 0; count2 < out.size(); count2++) {
 		fin.push_back(out.at(count2));  // add the whole out to the end of the fin array
@@ -838,11 +764,9 @@ void shotcut() {
 	for (count2 = 0; count2 < fin.size(); count2++) {
 		wrtmlt << fin.at(count2) << endl;
 	}
-
 	wrtmlt.close();
 
 	cout << "Done!" << endl;
 
 	exit(0);
 }
-// end of the writer file

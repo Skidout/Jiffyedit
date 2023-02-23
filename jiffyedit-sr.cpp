@@ -1,23 +1,13 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <sstream>
-#include <stdio.h>
-#include <iomanip>
-#include <cstring>
-#include <vector>
+// includes inside common.hpp
+
+#include "common.hpp"
 
 using namespace std;
 
-string bfflt, in, temps, metaline, path, cmd, totlen, metaline2, metaline3;
-float tempf, countf, buffx2, secdur; // total length of the video in seconds
+string bfflt, in, totlen, metaline3;
+float buffx2; // total length of the video in seconds
 bool fdur = false;
-char tempc;
-long long int len, temp, count2, count3, count5;
-long long int pos = -1;
-bool hasjob = false; // stops execution in case the user has entered a command with nothing to do
-bool tempb;
+long long int len;
 float buff = 0.3;
 float mclip = 0.5;
 vector <float> silarr;
@@ -26,40 +16,6 @@ int decbels = 20;
 
 void primary();
 void sorter();
-
-string sprstr;
-string substr;
-string repstr;
-
-string replace() {
-	pos = -1;
-	pos = sprstr.find(substr);
-	if (pos < 0) {
-		cout << "Fatal error: Substring to replace not found. Please report, send video and command if you can.";
-		exit(2);
-	}
-	temp = size(substr);
-	sprstr.erase(pos, size(substr));
-	sprstr.insert(pos, repstr);
-	return sprstr;
-}
-
-bool isnum() {
-	char comp = metaline[temp]; // character to compare
-	if (comp == '0') {return true;}
-	else if (comp == '1') {return true;}
-	else if (comp == '2') {return true;}
-	else if (comp == '3') {return true;}
-	else if (comp == '4') {return true;}
-	else if (comp == '5') {return true;}
-	else if (comp == '6') {return true;}
-	else if (comp == '7') {return true;}
-	else if (comp == '8') {return true;}
-	else if (comp == '9') {return true;}
-	else {return false;}
-}
-
-void reset() {primary();} // can reset the program when needed.
 
 void reader() {
 
@@ -157,8 +113,7 @@ void reader() {
 	}
 	
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
-	
-	sprstr = cmd2; substr = "PATH"; repstr = path; cmd2 = replace();
+	cmd2 = replace(cmd2, "PATH", path);
 	
 	char * getcmd2 = new char[cmd2.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here
 	strcpy(getcmd2, cmd2.c_str());
