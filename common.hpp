@@ -22,7 +22,6 @@ string replace(string sprstr, string substr, string repstr) {
 		cout << "Fatal error: Substring to replace not found. Please report, send video and command if you can." << endl;
 		exit(2);
 	}
-	int end = size(substr);
 	sprstr.erase(pos, size(substr));
 	sprstr.insert(pos, repstr);
 	return sprstr;

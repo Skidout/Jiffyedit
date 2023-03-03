@@ -13,6 +13,9 @@ bool hasres = false;
 bool fheight = false; // found height indicator
 bool fwidth = false;
 bool fclsp = false;
+bool shotcutb = false;
+bool pitivib = false;
+bool overwrite = false;
 unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, count6, len, clpint; // clipper int
 float tempf2, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
 vector <float> clparr; // timestamps where 0 is begin, 1 is end, 2 is begin and so on
@@ -114,6 +117,148 @@ string toanatim(float totimvar, int precision) { // to analogue time
 	getline(wrttim, result);
 
 	return result;
+}
+
+void pitivi() {
+	vector <string> out;
+	
+	cout << "Generating XGES file..." << endl;
+	
+	tempb = true;
+	while (tempb) { // replace all spaces with %20 code
+		pos = -1;
+		pos = path.find(" ");
+		if (pos == -1) {
+			tempb = false;
+			break;
+		} else {
+			path = replace(path, " ", "%20");
+		}
+	}
+	
+	out.push_back("<ges version=\'0.7\'>");
+	out.push_back("  <project properties=\'properties;\' metadatas=\'metadatas, scaled_proxy_width=(int)0, scaled_proxy_height=(int)0, pitivi::title_safe_area_vertical=(double)0.80000000000000004, pitivi::title_safe_area_horizontal=(double)0.80000000000000004, pitivi::action_safe_area_vertical=(double)0.90000000000000002, pitivi::action_safe_area_horizontal=(double)0.90000000000000002, render-scale=(double)100;\'>");
+	out.push_back("    <encoding-profiles>");
+	out.push_back("      <encoding-profile name=\'pitivi-profile\' description=\'Pitivi encoding profile\' type=\'container\' preset-name=\'webmmux\' format=\'video/webm\' >");
+	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'0\' type=\'video\' presence=\'0\' />");
+	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'1\' type=\'audio\' presence=\'0\' />");
+	out.push_back("      </encoding-profile>");
+	out.push_back("    </encoding-profiles>");
+	out.push_back("    <ressources>");
+	out.push_back(replace("      <asset id=\'file://PATH\' extractable-type-name=\'GESUriClip\' >", "PATH", path));
+	out.push_back("        <stream-info />");
+	out.push_back("        <stream-info />");
+	out.push_back("      </asset>");
+	out.push_back("      <asset id=\'crossfade\' extractable-type-name=\'GESTransitionClip\' >");
+	out.push_back("      </asset>");
+	out.push_back("    </ressources>");
+	out.push_back("    <timeline >");
+	out.push_back("      <track caps=\'video/x-raw(ANY)\' track-type=\'4\' track-id=\'0\' />");
+	out.push_back("      <track caps=\'audio/x-raw(ANY)\' track-type=\'2\' track-id=\'1\' />");
+	out.push_back("      <layer priority=\'0\' >");
+	
+	float prolen = 0.0;
+	int precision;
+	string dotstr = ".";
+	count3 = 0;
+	for (count2 = 0; count2 < clparr.size(); count2 = count2 + 2) {
+		temps = "        <clip id=\'CLPNUM\' asset-id=\'file://PATH\' type-name='GESUriClip\' layer-priority=\'0\' track-types=\'6\' start=\'START\' duration=\'DUR\' inpoint=\'INPOINT\' rate=\'0\' properties=\'properties, name=(string)uriclipCOUNT3;\' >";
+		temps = replace(temps, "CLPNUM", to_string(count3));
+		temps = replace(temps, "PATH", path);
+		
+		stringstream getsrt; 
+		//precision = 9.0; // fixed doesn't seem to be working in this part of the file so the precision has to be determined manually.
+	//	if (clparr.at(count2) > 10.0 and clparr.at(count2) < 100.0 { // and i really don't understand this one. fixed is having completely different behavior in different parts of the same BINARY
+//			precision = 10.0;
+//		} else if (clparr.at(count2) > 100.0 and <clparr.at(count2 < ))
+		getsrt << fixed << setprecision(9) << prolen;
+		getline(getsrt, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos, dotstr.size());  // pitivi wants these in some weird format. guint or something i think. this is the only way i can think of to convert
+		temps = replace(temps, "START", temps2);
+		
+		stringstream getend;
+		getend << fixed << setprecision(9) << clparr.at(count2 + 1) - clparr.at(count2);
+		getline(getend, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos,  dotstr.size());
+		temps = replace(temps, "DUR", temps2);
+		
+		tempf = clparr.at(count2 + 1) - clparr.at(count2);
+		prolen = prolen + tempf;
+		
+		stringstream getinp;
+		getinp << fixed << setprecision(9) << clparr.at(count2);
+		getline(getinp, temps2);
+		pos = temps2.find(dotstr); 
+		temps2.erase(pos, dotstr.size());
+		temps = replace(temps, "INPOINT", temps2);
+		
+		temps = replace(temps, "COUNT3", to_string(count3));
+		out.push_back(temps);
+		
+		out.push_back("          <source track-id=\'0\' >"); // video track
+		
+		temps = "            <binding type='direct' source_type='interpolation' property='alpha' mode='1' track_id='0' values =' START:1  END:1 '/>";
+		
+		stringstream getsrt2;
+		getsrt2 << fixed << setprecision(9) << clparr.at(count2);
+		getline(getsrt2, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos, dotstr.size());
+		temps = replace(temps, "START", temps2);
+		
+		stringstream getend2;
+		getend2 << fixed << setprecision(9) << clparr.at(count2 + 1);
+		getline(getend2, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos, dotstr.size());
+		temps = replace(temps, "END", temps2);
+		
+		out.push_back(temps);
+		
+		out.push_back("          </source>");
+		out.push_back("          <source track-id='1' >"); // audio track
+		
+		temps = "            <binding type='direct' source_type='interpolation' property='volume' mode='1' track_id='1' values =' START:0.10000000149011612  END:0.10000000149011612 '/>";
+		
+		stringstream getsrt3; 
+		getsrt3 << fixed << setprecision(9) << clparr.at(count2);
+		getline(getsrt3, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos, dotstr.size());
+		temps = replace(temps, "START", temps2);
+		
+		stringstream getend3;
+		getend3 << fixed << setprecision(9) << clparr.at(count2 + 1);
+		getline(getend3, temps2);
+		pos = temps2.find(dotstr);
+		temps2.erase(pos, dotstr.size());
+		temps = replace(temps, "END", temps2);
+		
+		out.push_back(temps);
+		
+		out.push_back("          </source>");
+		out.push_back("        </clip>");
+		
+		count3++;
+	}
+	
+	out.push_back("      </layer>");
+	out.push_back("      <groups>");
+	out.push_back("      </groups>");
+	out.push_back("    </timeline>");
+	out.push_back("  </project>");
+	out.push_back("</ges>");
+	
+	ofstream wrtxges(outpath);
+	for (count2 = 0; count2 < out.size(); count2++) {
+		wrtxges << out.at(count2) << endl;
+	}
+	wrtxges.close();
+	
+	cout << "Done!" << endl;
+	exit(0);
 }
 
 void reader() {
@@ -368,12 +513,13 @@ void reader() {
 
 	getline(gethei, asphei);
 
-	shotcut();
+	if (shotcutb) {shotcut();}
+	if (pitivib) {pitivi();}
 }
 
 void primary();
 
-int main(int argc, char * argv[]) {
+int main(int argc, char * arga[]) {
 
 	vector <string> ls; 
 	stringstream getls; 
@@ -466,55 +612,85 @@ int main(int argc, char * argv[]) {
 			clipls.erase(iter);
 		} 
 	}
+	vector <string> argv;
 	
-	if (argc > 0) {
-		path = argv[1];
-	} else {
-		cout << "Fatal error: No path or instruction given." << endl;
-		exit(4);
-	}
 	bool fclipr = false; // found clipper
 	string tempargs;
-	if (argc > 1) { 
-		for (count2 = 2; count2 < argc; count2++) {
-			if (argv[count2] == NULL) {
-				cout << endl << "Fatal error: Invalid argumen>ts passed." << endl;
-				exit (4);
-			}
-			if (argv[count2][0] == '[') { // find and specify requested clipper, or exit if none match.
-				temps = argv[count2];
-				temps2 = temps;
-				temps2.append("]"); // temps2 becomes the string used to check the call.
-				tempc = temps[temps.size() - 1];
-				if (not(tempc == ']')) {
-					for (count3 = count2 + 1; count3 < argc; count3++) {
-						temps = argv[count3];
-						tempc = temps[0];
-						if (not(tempc == ']')) {
-							tempargs.append(argv[count3]);
-							tempargs.append(" ");
-						} else {break;}
-					}
-				}
-				else {temps.append("]");}
-				for (count5 = 0; count5 < clipls.size(); count5++) {
-					if (fclipr) {break;}
-					pos = -1;
-					pos = clipls.at(count5).call.find(temps2);
-
-					if (pos == 0) {
-						clpint = count5;
-						fclipr = true;
-						clipls.at(clpint).args = tempargs;
-						
-					}
-				}
-			}
-		}
-	} else {
-		cout << "Fatal error: Invalid arguments passed. Enter ? for help" << endl;
+	if (argc == 1 or argc == 2) {
+		cout << "Fatal error: no path or instruction given" << endl;
 		exit(4);
+	} 
+	
+	for (count2 = 2; count2 < argc; count2++) { // convert arguments to safe format
+		temps = arga[count2];
+		argv.push_back(temps);
 	}
+	
+	path = arga[1];
+	for (count2 = 0; count2 < argv.size(); count2++) {
+		tempc = argv.at(count2).at(0);
+		if (tempc == '[') {
+			tempc = argv.at(count2).at(argv.at(count2).size() - 1);
+			if (tempc == ']') {
+				for (count3 = 0; count3 < clipls.size(); count3++) {
+					pos = -1;
+					pos = clipls.at(count3).call.find(argv.at(count2));
+					if (pos == 0) {
+						clpint = count3;
+						fclipr = true;
+						break;
+					}
+				}
+			} else {
+				temps = argv.at(count2);
+				temps.append("]");
+				for (count3 = 0; count3 < clipls.size(); count3++) {
+					pos = -1;
+					pos = clipls.at(count3).call.find(temps);
+					if (pos == 0) {
+						clpint = count3;
+						fclipr = true;
+						break;
+					}
+				}
+				
+				for (count2 = count2; count2 < argv.size(); count2++) { // count2 has to be used here to increment the arguments
+					tempc = argv.at(count2).at(0);
+					if (not(tempc == ']')) {
+						tempargs.append(argv.at(count2));
+					} else {
+						break;
+					}
+				}
+			}
+			if (not(fclipr)) {
+				cout << "Fatal error: clipper not found" << endl;
+				exit(4);
+			}
+		} else if (tempc == '-') {
+			pos = -1;
+			pos = argv.at(count2).find("-shotcut");
+			if (pos == 0) {
+				shotcutb = true;
+			}
+			pos = -1;
+			pos = argv.at(count2).find("-pitivi");
+			if (pos == 0) {
+				pitivib = true;
+			}
+			pos = -1;
+			pos = argv.at(count2).find("-overwrite");
+			if (pos == 0) {
+				overwrite = true;
+			}
+			if (not(shotcutb) and not(pitivib)) {
+				cout << "Fatal error: no editor selected" << endl;
+				exit(4);
+			}
+			
+		}
+	}
+	
 	primary();
 }
 
@@ -566,19 +742,24 @@ void primary() {
 			exit(4);
 		}
 
-		outpath = path; // get the path of the resulting mlt file
+		outpath = path; // get the path of the resulting file
 		reverse(outpath.begin(), outpath.end());
 		pos = -1;
 		pos = outpath.find(".");
 		outpath.erase(0, pos);
-		temps = "tlm";
+		if (shotcutb) {
+			temps = "tlm";
+		}
+		if (pitivib) {
+			temps = "segx";
+		}
 		temps.append(outpath);
 		outpath = temps;
 		reverse(outpath.begin(), outpath.end());
 
 		fs::path xmlpath(outpath);
 		fexists = fs::exists(xmlpath);
-		if (fexists) {
+		if (fexists and not(overwrite)) {
 			cout << endl << outpath << " already exists. Continuing will overwrite it. Continue? (Y/n): ";
 			getline(cin, temps);
 			tempc = temps[0];
