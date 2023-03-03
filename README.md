@@ -1,4 +1,4 @@
-# Jiffyedit: Remove silence from videos into the Shotcut MLT format +more soon.
+# Jiffyedit: Remove silence from videos into Shotcut or Pitivi projects.
 
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
@@ -7,14 +7,14 @@ Also note: This is an early version. Expect a few bugs and for things to change.
 
 ###  Linux:
   
-  You must have GCC & FFmpeg installed.
+  You must have GCC & FFmpeg installed. You may uninstall GCC after installation is complete.
   You do not need root permissions for the alternative installations.
   Download all the necessary files.
   Navigate to where you downloaded the files in the terminal.
   
     sudo install -D jiffyedit -t /usr/bin
-    g++ -fsanitize=address -fstack-usage -g jiffyedit-master.cpp -o jiffyedit-master
-    g++ -fsanitize=address -fstack-usage -g jiffyedit-sr.cpp -o jiffyedit-sr
+    g++ -fsanitize=address -fstack-usage -O3 jiffyedit-master.cpp -o jiffyedit-master
+    g++ -fsanitize=address -fstack-usage -O3 jiffyedit-sr.cpp -o jiffyedit-sr
     sudo install -D jiffyedit-master -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr.dat -t /usr/lib/jiffyedit
@@ -31,11 +31,11 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
   
 ###  Windows:
   
-    Find a C++17 or later compiler, compile it, then you're on your own after that. Keep in mind that the program itself requires the full path of the video file to be passed, and for all the clippers to be in the same directory as the master program, and it needs to be called from that directory. You might also need to specify the executable files as .exe where necessary.
+    Find a C++17 or later compiler, compile it, then you're on your own after that. Keep in mind that the program itself requires the full path of the video file to be passed, and for all the clippers to be in the same directory as the master program, and it needs to be active in that directory. You might also need to specify the executable files as .exe in the .dat files.
     
 ###  Mac:
   
-    Same as windows.
+    Should be similar to Linux, but the BASH script may not work.
     
 
 ### Usage:
@@ -43,26 +43,30 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
   Enter ? for help, if you need it.
   The command will be all one line, structured like this:
   
-    (PATH OF FILE) [sr]
-    ex. jiffyedit /home/user/Videos/myvid.mp4 [sr]
-    or jiffyedit /home/user/Videos/myvid.mp4 [sr db25 mt0.5 bf0.4 ]
+    (PATH OF FILE) [plugin name] -editor
+    ex. jiffyedit /home/user/Videos/myvid.mp4 [sr] -shotcut
+    or jiffyedit /home/user/Videos/myvid.mp4 [sr db25 mt0.5 bf0.4 ] -pitivi
    
   Where (PATH OF FILE) is the path of the video file you want to remove silence from.
+  In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
+  
   [sr] is for silence remove.
   bf# - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Must be a decimal number Default 0.3s.
   mt# - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips Must be a decimal Default 0.5s.
   db# - Audio level for when silence ends and clips begin. Must NOT be a decimal. Default -20dB.
   
-  The MLT project file will be in the same folder as your video, with the same name. If that file already exists, you will be asked if you want to overwrite it first.
+  The resulting file will be in the same folder as your video, with the same name but the extension changed. If that file already exists, you will be asked if you want to overwrite it first. You can use the -overwrite option to specify that you want to overwrite any files, if they exist, so you will not be prompted.
   
 
 ### Known bugs and tips:
+
+  Pitivi currently cannot save files from Jiffyedit. This will be fixed in upcoming updates as soon as I figure out why. For now, just don't let the app close without renderig when you are done editing.
 
   If a part of the video is cut out that you want to include, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
  - Fix bugs.
- - Add support for Pitivi.
+ - Fix Pitivi not saving projects.
  - Add support for auto filters.
 
 ### For potential contributors:
