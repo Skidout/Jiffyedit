@@ -140,8 +140,8 @@ void pitivi() {
 	out.push_back("  <project properties=\'properties;\' metadatas=\'metadatas, scaled_proxy_width=(int)0, scaled_proxy_height=(int)0, pitivi::title_safe_area_vertical=(double)0.80000000000000004, pitivi::title_safe_area_horizontal=(double)0.80000000000000004, pitivi::action_safe_area_vertical=(double)0.90000000000000002, pitivi::action_safe_area_horizontal=(double)0.90000000000000002, render-scale=(double)100;\'>");
 	out.push_back("    <encoding-profiles>");
 	out.push_back("      <encoding-profile name=\'pitivi-profile\' description=\'Pitivi encoding profile\' type=\'container\' preset-name=\'webmmux\' format=\'video/webm\' >");
-	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'0\' type=\'video\' presence=\'0\' />");
-	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'1\' type=\'audio\' presence=\'0\' />");
+	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'0\' type=\'video\' presence=\'0\' format='video/x-vp8, profile=(string){ 0, 1, 2, 3 }' />");
+	out.push_back("        <stream-profile parent=\'pitivi-profile\' id=\'1\' type=\'audio\' presence=\'0\' format='audio/x-vorbis, rate=(int)[ 1, 200000 ], channels=(int)[ 1, 255 ]' />");
 	out.push_back("      </encoding-profile>");
 	out.push_back("    </encoding-profiles>");
 	out.push_back("    <ressources>");
@@ -158,7 +158,6 @@ void pitivi() {
 	out.push_back("      <layer priority=\'0\' >");
 	
 	float prolen = 0.0;
-	int precision;
 	string dotstr = ".";
 	count3 = 0;
 	for (count2 = 0; count2 < clparr.size(); count2 = count2 + 2) {
@@ -270,11 +269,8 @@ void reader() {
 	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from fstream would probably work, but i'm following their advice, just to be safe.
 	char buf[1024]; // this is just a char array because its safer with C functions, i guess? strings would probably work, but again, better to be safe.
 
-	char * getcmd = new char[cmd.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here (make sure to delete getcmd or realcmd later)
-	strcpy(getcmd, cmd.c_str()); /// this needed to stay here because using ffprobe to get the resultion did not work. i dont know why, but it didnt
-
-	const char * realcmd = getcmd;
-
+	const char * realcmd = cmd.c_str();
+	cout << "Gathering metadata..." << endl;
 	inmeta = popen(realcmd, "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
 	if (inmeta != NULL) {
 
@@ -287,7 +283,7 @@ void reader() {
 			if (boool < 0) {
 				len = size(metaline);
 
-				for (count3 = 0; count3 < len; count3++) { /// find resolution by scanning for three numbers in a row, then an 'x', then another three numbers
+				for (count3 = 0; count3 < len; count3++) { /// find resolution by scanning for three numbers in a row, then an 'x', then another three numbers. needs to stay because ffprobe is being weird
 					if (hasres) {break;}
 					temp = count3;
 					if (isnum()) {
@@ -375,10 +371,7 @@ void reader() {
 
 	cmd2 = replace(cmd2, "PATH", path);
 
-	char * getcmd2 = new char[cmd2.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here
-	strcpy(getcmd2, cmd2.c_str());
-
-	const char * realcmd2 = getcmd2;
+	const char * realcmd2 = cmd2.c_str();
 
 	FILE * indur = NULL;
 
@@ -400,9 +393,7 @@ void reader() {
 
 	cmd3 = replace(cmd3, "PATH", path);
 
-	char * getcmd3 = new char[cmd3.length() + 1]; // the string converted to a const char * for the pipe funtion. this is done here
-	strcpy(getcmd3, cmd3.c_str());
-	const char * realcmd3 = getcmd3;
+	const char * realcmd3 = cmd3.c_str();
 
 	FILE * infps = NULL;
 
@@ -430,14 +421,12 @@ void reader() {
 	cmd4.append(" ");
 	cmd4.append(clipls.at(clpint).args);
 
-	char * getcmd4 = new char[cmd4.length() + 1]; // the string converted to a const char * for the pipe funtion. this is done here
-	strcpy(getcmd4, cmd4.c_str());
-	const char * realcmd4 = getcmd4;
+	const char * realcmd4 = cmd4.c_str();
 
 	FILE * inclps = NULL;
 	
 	tempb = false; // tempb here is used to store whether the last timestamp was a clipstart or clipend. true = clipstart, false = clipend
-
+	cout << "Clipping..." << endl;
 	if ((inclps = popen(realcmd4, "r")) != NULL) {
 
 		while (fgets(buf, 1024, inclps) != NULL) {
@@ -495,11 +484,6 @@ void reader() {
 	temp = __gcd(wid, hei);
 	aspwidi = wid / temp;
 	aspheii = hei / temp;
-	
-	delete [] realcmd4;
-	delete [] realcmd3;
-	delete [] realcmd2;
-	delete [] realcmd;
 
 	stringstream getwid;
 
@@ -616,10 +600,23 @@ int main(int argc, char * arga[]) {
 	
 	bool fclipr = false; // found clipper
 	string tempargs;
-	if (argc == 1 or argc == 2) {
+	if (argc == 1) {
 		cout << "Fatal error: no path or instruction given" << endl;
 		exit(4);
-	} 
+	} else if (arga[1][0] == '?') {
+		cout << endl << "First, enter the file path. ex. \"/home/user/Videos/myvid.mp4\" Then, enter one of the options listed below;" << endl;
+		for (count6 = 0; count6 < size(clipls); count6++) {
+			cout << '	' << clipls.at(count6).name << ' ' << clipls.at(count6).call << endl;
+			for (count2 = 0; count2 < size(clipls.at(count6).help); count2++) {
+				cout << "		";
+				if (count2 == size(clipls.at(count6).help) - 1) {
+					cout << "Example command: ";
+				}
+				cout << clipls.at(count6).help.at(count2) << endl;
+			}
+		}
+		exit(0);
+	}
 	
 	for (count2 = 2; count2 < argc; count2++) { // convert arguments to safe format
 		temps = arga[count2];
@@ -683,12 +680,11 @@ int main(int argc, char * arga[]) {
 			if (pos == 0) {
 				overwrite = true;
 			}
-			if (not(shotcutb) and not(pitivib)) {
+		}
+	}
+	if (not(shotcutb) and not(pitivib)) {
 				cout << "Fatal error: no editor selected" << endl;
 				exit(4);
-			}
-			
-		}
 	}
 	
 	primary();
@@ -697,80 +693,62 @@ int main(int argc, char * arga[]) {
 void primary() {
 
 	tempc = path[0];
-	if (tempc == '?') {
+	if (tempc == '\'') { // remove quotation marks sorrounding path, if any
+		path.erase(0, 1);
+	}
+	else if (tempc == '\"') {
+		path.erase(0, 1);
+	}
+	reverse(path.begin(), path.end());
 
-		cout << endl << "First, enter the file path. ex. \"/home/user/Videos/myvid.mp4\" Then, enter one of the options listed below;" << endl;
-		for (count6 = 0; count6 < size(clipls); count6++) {
-			cout << '	' << clipls.at(count6).name << ' ' << clipls.at(count6).call << endl;
-			for (count2 = 0; count2 < size(clipls.at(count6).help); count2++) {
-				cout << "		";
-				if (count2 == size(clipls.at(count6).help) - 1) {
-					cout << "Example command: ";
-				}
-				cout << clipls.at(count6).help.at(count2) << endl;
-			}
-		}
+	tempc = path[0];
+	if (tempc == '\'') {
+		path.erase(0, 1);
+	}
+	else if (tempc == '\"') {
+		path.erase(0, 1);
+	}
+	reverse(path.begin(), path.end());
 
-		exit(0);
-	} else {
+	// so this here is also terribly documented online. i will explain this in detail as well.
+	// look up top for namespace stuff
+	fs::path vidpath(path); // this is declaring what path you want to check
+	bool fexists = true;
+	fexists = fs::exists(vidpath); // fs::exists will return a bool, true if it exists, false if not.
+	if (not(fexists)) {
+		cout << endl << "Fatal error: Video file does not exist!" << endl;
+		exit(4);
+	}
 
-		tempc = path[0];
-		if (tempc == '\'') { // remove quotation marks sorrounding path, if any
-			path.erase(0, 1);
-		}
-		else if (tempc == '\"') {
-			path.erase(0, 1);
-		}
-		reverse(path.begin(), path.end());
+	outpath = path; // get the path of the resulting file
+	reverse(outpath.begin(), outpath.end());
+	pos = -1;
+	pos = outpath.find(".");
+	outpath.erase(0, pos);
+	if (shotcutb) {
+		temps = "tlm";
+	}
+	if (pitivib) {
+		temps = "segx";
+	}
+	temps.append(outpath);
+	outpath = temps;
+	reverse(outpath.begin(), outpath.end());
 
-		tempc = path[0];
-		if (tempc == '\'') {
-			path.erase(0, 1);
-		}
-		else if (tempc == '\"') {
-			path.erase(0, 1);
-		}
-		reverse(path.begin(), path.end());
-
-		// so this here is also terribly documented online. i will explain this in detail as well.
-		// look up top for namespace stuff
-		fs::path vidpath(path); // this is declaring what path you want to check
-		bool fexists = true;
-		fexists = fs::exists(vidpath); // fs::exists will return a bool, true if it exists, false if not.
-		if (not(fexists)) {
-			cout << endl << "Fatal error: Video file does not exist!" << endl;
-			exit(4);
-		}
-
-		outpath = path; // get the path of the resulting file
-		reverse(outpath.begin(), outpath.end());
-		pos = -1;
-		pos = outpath.find(".");
-		outpath.erase(0, pos);
-		if (shotcutb) {
-			temps = "tlm";
-		}
-		if (pitivib) {
-			temps = "segx";
-		}
-		temps.append(outpath);
-		outpath = temps;
-		reverse(outpath.begin(), outpath.end());
-
-		fs::path xmlpath(outpath);
-		fexists = fs::exists(xmlpath);
-		if (fexists and not(overwrite)) {
-			cout << endl << outpath << " already exists. Continuing will overwrite it. Continue? (Y/n): ";
-			getline(cin, temps);
-			tempc = temps[0];
-			if (tempc == 'y' or tempc == 'Y') {
-				cout << endl << "Continuing..." << endl;
-			} else {
-				cout << endl << "Program aborted by user." << endl;
-				exit(0);
-			}
+	fs::path xmlpath(outpath);
+	fexists = fs::exists(xmlpath);
+	if (fexists and not(overwrite)) {
+		cout << endl << outpath << " already exists. Continuing will overwrite it. Continue? (Y/n): ";
+		getline(cin, temps);
+		tempc = temps[0];
+		if (tempc == 'y' or tempc == 'Y') {
+			cout << endl << "Continuing..." << endl;
+		} else {
+			cout << endl << "Program aborted by user." << endl;
+			exit(0);
 		}
 	}
+	
 
 	cmd = "ffmpeg -i \"";
 

@@ -28,10 +28,7 @@ void reader() {
 	
 	char buf[1024]; // this is just a char array because its safer with C functions, i guess? strings would probably work, but again, better to be safe.
 	
-	char * getcmd = new char[cmd.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here (make sure to delete getcmd or realcmd later)
-	strcpy(getcmd, cmd.c_str());
-	
-	const char * realcmd = getcmd;
+	const char * realcmd = cmd.c_str();
 	
 	inmeta = popen(realcmd, "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
 	
@@ -115,10 +112,7 @@ void reader() {
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 	cmd2 = replace(cmd2, "PATH", path);
 	
-	char * getcmd2 = new char[cmd2.length() + 1]; // the string needs to be converted to a const char * for the pipe funtion. this is done here
-	strcpy(getcmd2, cmd2.c_str());
-	
-	const char * realcmd2 = getcmd2;
+	const char * realcmd2 = cmd2.c_str();
 	
 	FILE * indur = NULL;
 	
@@ -136,9 +130,6 @@ void reader() {
 	
 	getlen >> secdur;
 	
-	delete [] realcmd2;
-	delete [] realcmd;
-	
 	sorter();
 }
 
@@ -152,10 +143,6 @@ int main(int argc, char * argv[]) {
 	if (argc > 1) {
 	args = true;
 		for (count2 = 1; count2 < argc; count2++) {
-			if (argv[count2] == NULL) {
-				cout << endl << "Fatal error: Invalid arguments passed." << endl;
-				exit (4);
-			}
 			temps = argv[count2];
 			in.append(temps);
 			in.append(" ");
