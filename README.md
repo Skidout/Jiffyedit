@@ -7,14 +7,16 @@ Also note: This is an early version. Expect a few bugs and for things to change.
 
 ###  Linux:
   
+  If using Arch, install via the PKGBUILD.
+  
   You must have GCC & FFmpeg installed. You may uninstall GCC after installation is complete.
   You do not need root permissions for the alternative installations.
   Download all the necessary files.
   Navigate to where you downloaded the files in the terminal.
   
     sudo install -D jiffyedit -t /usr/bin
-    g++ -fsanitize=address -fstack-usage -O3 jiffyedit-master.cpp -o jiffyedit-master
-    g++ -fsanitize=address -fstack-usage -O3 jiffyedit-sr.cpp -o jiffyedit-sr
+    g++ -Ofast jiffyedit-master.cpp -o jiffyedit-master
+    g++ -Ofast jiffyedit-sr.cpp -o jiffyedit-sr
     sudo install -D jiffyedit-master -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr.dat -t /usr/lib/jiffyedit
@@ -45,7 +47,7 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
   
     (PATH OF FILE) [plugin name] -editor
     ex. jiffyedit /home/user/Videos/myvid.mp4 [sr] -shotcut
-    or jiffyedit /home/user/Videos/myvid.mp4 [sr db25 mt0.5 bf0.4 ] -pitivi
+    or jiffyedit /home/user/Videos/myvid.mp4 [sr db25 mt0.5 bf0.4 ] -pitivi -overwrite
    
   Where (PATH OF FILE) is the path of the video file you want to remove silence from.
   In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
@@ -60,13 +62,10 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
 
 ### Known bugs and tips:
 
-  Pitivi currently cannot save files from Jiffyedit. This will be fixed in upcoming updates as soon as I figure out why. For now, just don't let the app close without renderig when you are done editing.
-
   If a part of the video is cut out that you want to include, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
  - Fix bugs.
- - Fix Pitivi not saving projects.
  - Add support for auto filters.
 
 ### For potential contributors:
@@ -75,7 +74,7 @@ If want to use git clone and then enter the cloned folder on your PC, you can co
  
 ### Developer Documentation:
   When a user decides to use a clipper, the master program will start the clipper. The first argument passed will be the full path to the video file. After this will be whatever is in between the [clippername and ]. If there is nothing but an empty call, no additional arguments will be passed.
-  The master program expects the start of a clip to be a floating point variable output right after "clipstart: " (see jiffyedit-sr.cpp). It will expect the end of a clip to be the same but "clipend: " rather than clipstart.
+  The master program expects the start of a clip to be a floating point variable output in a text stream right after "clipstart: " (see jiffyedit-sr.cpp). It will expect the end of a clip to be the same but "clipend: " rather than clipstart.
   If a fatal error occurs, you can tell the master program by starting a line with "Fatal error: ". This line will be passed to the user.
   Any lines that do not fit within these categories will also be passed to the user.
   * The master program does not read this data live, but only after the execution of the clipper has finished.
