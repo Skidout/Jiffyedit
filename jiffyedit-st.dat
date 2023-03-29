@@ -1,0 +1,6 @@
+filterer
+Smooth Transitions
+jiffyedit-st
+[st]
+dur # - set the duration of the fades (in seconds). Default is two frames. For Shotcut, this value cannot be less than the length of two frames.
+[st], [st dur 0.5 ]
