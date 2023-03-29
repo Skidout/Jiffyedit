@@ -1,14 +1,37 @@
-# Jiffyedit: Remove silence from videos into Shotcut or Pitivi projects.
+# Jiffyedit: Automate video editing tasks for Shotcut and Pitivi.
 
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
 
+## Usage:
+
+  Enter ?, -h, -help, or --help for help, if you need it.
+  The command will be all one line, structured like this:
+  
+    (path of file) [plugin name] -editor
+    ex. jiffyedit /home/user/Videos/myvid.mp4 [sr] [st] -shotcut
+    or jiffyedit /home/user/Videos/myvid.mp4 [sr db 25 mt 0.5 bf 0.4 ] [st dur 0.2 ] -pitivi
+   
+  Where (path of file) is the path of the video file you want to remove silence from.
+  In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
+  
+  [sr] Silence Remove - cut video to only the parts where the audio is as loud as specified.
+  
+    bf # - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Must be a decimal number Default 0.3s.
+    mt # - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips Must be a decimal Default 0.5s.
+    db # - Audio level for when silence ends and clips begin. Must NOT be a decimal. Default -20dB.
+    
+  [st] Smooth Transitions - add a fade-to-silence transition between clips to help ease the audio awkwardness.
+  
+    dur # - Set the duration of the fades. Default the length of two frames. Cannot be less than two frames for Shotcut.
+  
+  The resulting file will be in the same folder as your video, with the same name but the extension changed. If that file already exists, you will be asked if you want to overwrite it first. You can use the -overwrite option to specify that you want to overwrite any files, if they exist, so you will not be prompted. This is mostly for the purpose of developing your own plugins or contributing to the existing ones, so I do not recommend using it otherwise.
+  
+
 ## Installation Instructions:
 
 ###  Linux:
-  
-  If using Arch, install via the PKGBUILD.
-  
+
   You must have GCC & FFmpeg installed. You may uninstall GCC after installation is complete.
   You do not need root permissions for the alternative installations.
   Download all the necessary files.
@@ -17,66 +40,95 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     sudo install -D jiffyedit -t /usr/bin
     g++ -Ofast jiffyedit-master.cpp -o jiffyedit-master
     g++ -Ofast jiffyedit-sr.cpp -o jiffyedit-sr
+    g++ -Ofast jiffyedit-st.cpp -o jiffyedit-st
     sudo install -D jiffyedit-master -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr -t /usr/lib/jiffyedit
+    sudo install -D jiffyedit-st -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr.dat -t /usr/lib/jiffyedit
+    sudo install -D jiffyedit-st.dat -t /usr/lib/jiffyedit
       
-  After that you can run it simply by typing jiffyedit in the terminal
+  After that you can run it as you would other programs.
     
-  Alternatively, for permissionless install:
-    Add the path of the resulting file as an alias for 'jiffyedit' in your bash/zsh/fish config file, ex:
+  Alternatively, for permissionless install, add the path of the resulting file as an alias for 'jiffyedit' in your bash/zsh/fish config file, ex:
     
-      alias jiffyedit='/home/user/programs/jiffyedit'
-            
-Or you can simply navigate directly to the executable when you want to use it.
-If want to use git clone and then enter the cloned folder on your PC, you can compile using the same command, then add it just like it says above.
+    alias jiffyedit='/home/user/programs/jiffyedit'
+      
+  And then change the path of the executable in the shell script to reflect the actual path of jiffyedit-master
+  Or you can simply navigate directly to the executable when you want to use it.
+    
+  If want to use git clone and then enter the cloned folder on your PC, you can compile using the same commands, then add it just like it says above.
   
 ###  Windows:
   
     Find a C++17 or later compiler, compile it, then you're on your own after that. Keep in mind that the program itself requires the full path of the video file to be passed, and for all the clippers to be in the same directory as the master program, and it needs to be active in that directory. You might also need to specify the executable files as .exe in the .dat files.
+
     
 ###  Mac:
   
-    Should be similar to Linux, but the BASH script may not work.
-    
-
-### Usage:
-
-  Enter ? for help, if you need it.
-  The command will be all one line, structured like this:
-  
-    (PATH OF FILE) [plugin name] -editor
-    ex. jiffyedit /home/user/Videos/myvid.mp4 [sr] -shotcut
-    or jiffyedit /home/user/Videos/myvid.mp4 [sr db25 mt0.5 bf0.4 ] -pitivi -overwrite
-   
-  Where (PATH OF FILE) is the path of the video file you want to remove silence from.
-  In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
-  
-  [sr] is for silence remove.
-  bf# - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Must be a decimal number Default 0.3s.
-  mt# - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips Must be a decimal Default 0.5s.
-  db# - Audio level for when silence ends and clips begin. Must NOT be a decimal. Default -20dB.
-  
-  The resulting file will be in the same folder as your video, with the same name but the extension changed. If that file already exists, you will be asked if you want to overwrite it first. You can use the -overwrite option to specify that you want to overwrite any files, if they exist, so you will not be prompted.
+    Should be similar to Linux, but the shell script may not work.
   
 
 ### Known bugs and tips:
 
-  If a part of the video is cut out that you want to include, if using Shotcut, you can drag from the edges of the clip to recover more of the video to include.
+  If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
  - Fix bugs.
- - Add support for auto filters.
 
 ### For potential contributors:
 
-  The best way you can contribute is to add support for the editor you use or to make your own clippers. I want to keep the number of clippers (and languages) on this repo to a minimum, but I have thought about making another repo that would contain clippers that have full support and are up to date but don't come packaged by default.
+  The best way you can contribute is to add support for the editor you use or to make your own plugins. I want to keep the number of plugins on this repo to the two that are here, but I have thought about making another repo that would contain clippers that have full support and are up to date but don't come packaged by default. This repo would probably still be restricted to C++. If you have your own plugin you want to contribute to this repo, if you are willing to license it under GPL3, please get in touch with me via email.
  
 ### Developer Documentation:
-  When a user decides to use a clipper, the master program will start the clipper. The first argument passed will be the full path to the video file. After this will be whatever is in between the [clippername and ]. If there is nothing but an empty call, no additional arguments will be passed.
-  The master program expects the start of a clip to be a floating point variable output in a text stream right after "clipstart: " (see jiffyedit-sr.cpp). It will expect the end of a clip to be the same but "clipend: " rather than clipstart.
-  If a fatal error occurs, you can tell the master program by starting a line with "Fatal error: ". This line will be passed to the user.
-  Any lines that do not fit within these categories will also be passed to the user.
-  * The master program does not read this data live, but only after the execution of the clipper has finished.
+  In order to make and use a plugin, it needs a few things.
   
-  For the master program to be able to see your clipper, it needs a .dat file in the same directory. The file can be called anything, so long as it ends in .dat. Inside the .dat file, on the first line, should be the type of sub-process this will be. For now, only clippers are supported so put "clipper". If for some reason you need to put a .dat file inside this directory that does not relate to your sub-process, you can put "ignore" anywhere on the first line and it will be ignored. The second line will be the name of the sub-process. The third will be the filename of the executable (not the full path). The fourth line defines the call the user will use to call your sub-process. It also defines the line before the help section. The help section ends when you put the call at the beginning of a line. That whole line will be passed, so you can use it to make an example command like I did (see jiffyedit-sr.dat).
+  The first is a .dat file in the same directory as the master program. It should look something like this:
+  
+    clipper/filterer
+    Name
+    executable name
+    [call]
+    (help section)
+    [call], [call option example ]
+    
+  You can also put "ignore" anywhere on the first line and it should be ignored. See jiffyedit-sr.dat or jiffyedit-st.dat if you still need more info.
+  
+  The second is an executable in the same directory as the master program that can output its results in the format required by the master progam.
+  
+  For clippers, the format is:
+  
+    clipstart: #
+    clipend: #
+    
+  The number should be floating point in a decimal format, not scientific. There cannot be a second clipstart before a clipend or vice versa.
+  
+  For filterers, the format depends on the editor in question.
+  For Shotcut:
+    
+    # (the amount of filters your program will use, can be 0)
+    (filter text)
+    
+  For Pitivi:
+    
+    (filter text)
+    -volume-control: (filter text) - to control the volume of a clip using timestamps and values.
+    -alpha control: (filter text) - to control the alpha of a clip using timestamps and values.
+    
+  In order to achieve this output, you likely need some information in order to do so. This is provided in the arguments.
+  For clippers:
+  
+    (path of file) (user args, if any)
+    
+  For filterers, it depends on the editor.
+  For Shotcut: 
+    
+    (path of file) shotcut (beginning timestamp of clip) (ending timestamp of clip) (clip number/total clip number) (filter number) (user args, if any)
+    ex. /home/user/Videos/myvid.mp4 shotcut 4.067 8.678 3/50 4
+    
+  For Pitivi:
+    
+    (path of file) pitivi (beginning timestamp of clip) (ending timestamp of clip) (clip number/total clip number) (user args, if any)
+    ex. /home/user/Videos/myvid.mp4 shotcut 4.067 8.678 3/50
+
+  For both types of plugins, you can put "Fatal error: " at the beginning of any line, followed by an error message, to end the execution of the master program, should you encounter an error which cannot be fixed during execution. This line will be passed to the user.
+  Any lines that a clipper outputs that do not use the format should be passed to the user.
