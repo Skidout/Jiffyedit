@@ -1,4 +1,4 @@
-# Jiffyedit: Automate video editing tasks for Shotcut and Pitivi.
+# Jiffyedit: Automate video editing tasks for Shotcut, Pitivi, and LosslessCut.
 
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
@@ -133,6 +133,8 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     
     (path of file) pitivi (beginning timestamp of clip) (ending timestamp of clip) (clip number/total clip number) (user args, if any)
     ex. /home/user/Videos/myvid.mp4 shotcut 4.067 8.678 3/50
+    
+  LosslessCut does not support filters.
 
   For both types of plugins, you can put "Fatal error: " at the beginning of any line, followed by an error message, to end the execution of the master program, should you encounter an error which cannot be fixed during execution. This line will be passed to the user.
   Any lines that a clipper outputs that do not use the format should be passed to the user.
