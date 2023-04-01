@@ -90,18 +90,19 @@ string toanatim(float totimvar, int precision) { // to analogue time
 
 void pitivi() {
 	vector <string> out;
+	string path2 = path; // for pitivi's format requirment
 	
 	cout << "Generating XGES file..." << endl;
 	
 	b1 = true;
 	while (b1) { // replace all spaces with %20 code
 		pos = -1;
-		pos = path.find(" ");
+		pos = path2.find(" ");
 		if (pos == -1) {
 			b1 = false;
 			break;
 		} else {
-			path = replace(path, " ", "%20");
+			path2 = replace(path2, " ", "%20");
 		}
 	}
 	
@@ -122,7 +123,7 @@ void pitivi() {
 	out.push_back("      </encoding-profile>");
 	out.push_back("    </encoding-profiles>");
 	out.push_back("    <ressources>");
-	out.push_back(replace("      <asset id=\'file://PATH\' extractable-type-name=\'GESUriClip\' >", "PATH", path));
+	out.push_back(replace("      <asset id=\'file://PATH\' extractable-type-name=\'GESUriClip\' >", "PATH", path2));
 	out.push_back("        <stream-info />");
 	out.push_back("        <stream-info />");
 	out.push_back("      </asset>");
@@ -136,7 +137,7 @@ void pitivi() {
 	
 	float prolen = 0.0;
 	i2 = 0;
-	cout << "Filtering..." << endl;
+	cout << "Filtering: 0/" << clparr.size() / 2;
 	for (i1 = 0; i1 < clparr.size(); i1 = i1 + 2) {
 		s1 = "        <clip id=\'CLPNUM\' asset-id=\'file://PATH\' type-name='GESUriClip\' layer-priority=\'0\' track-types=\'6\' start=\'START\' duration=\'DUR\' inpoint=\'INPOINT\' rate=\'0\' properties=\'properties, name=(string)uriclipCLPNUM2;\' >";
 		s1 = replace(s1, "CLPNUM", to_string(i2));
@@ -144,7 +145,7 @@ void pitivi() {
 		s1 = replace(s1, "DUR", ftog(clparr.at(i1 + 1) - clparr.at(i1)));
 		s1 = replace(s1, "INPOINT", ftog(clparr.at(i1)));
 		s1 = replace(s1, "CLPNUM2", to_string(i2));
-		s1 = replace(s1, "PATH", path);
+		s1 = replace(s1, "PATH", path2);
 		out.push_back(s1);
 		
 		f2 = clparr.at(i1 + 1) - clparr.at(i1);
@@ -238,6 +239,7 @@ void pitivi() {
 		out.push_back("        </clip>");
 		
 		i2++;
+		cout << "\r" << "Filtering: " << i1 / 2 + 1 << "/" << clparr.size() / 2;
 	}
 	
 	out.push_back("      </layer>");
@@ -253,7 +255,7 @@ void pitivi() {
 	}
 	wrtxges.close();
 	
-	cout << "Done!" << endl;
+	cout << endl << "Done!" << endl;
 	exit(0);
 }
 
@@ -534,13 +536,9 @@ int main(int argc, const char * arga[]) {
 		argv.push_back(arga[i1]);
 	}
 	
-	bool fclipr = false; // found clipper
-	string tempargs;
-	if (argc == 1 ) {
-		cout << "Fatal error: no path or instruction given" << endl;
-		exit(4);
-	} else if (argv.size() >= 2 and (argv.at(1).find("--help") == 0 or argv.at(1).at(0) == '?' or argv.at(1).find("-help") == 0 or (argv.at(1).find("-h") == 0 and argv.at(1).size() < 3))) {
-		cout << endl << "First, enter the file path. ex. \"/home/user/Videos/myvid.mp4\" Then, enter one of the options listed below and select an editor;" << endl;
+	if (argv.size() < 2) {
+		cout << "Fatal error: invalid input. Usage:" << endl;
+		cout << endl << "First, enter the file path. ex. -i \"/home/user/Videos/myvid.mp4\" Then, enter one of the options listed below and select an editor;" << endl;
 		for (i4 = 0; i4 < plugls.size(); i4++) {
 			cout << '	' << plugls.at(i4).name << ' ' << plugls.at(i4).call << endl;
 			for (i1 = 0; i1 < size(plugls.at(i4).help); i1++) {
@@ -552,17 +550,32 @@ int main(int argc, const char * arga[]) {
 			}
 		}
 		cout << "Currently the editors available are;" << endl;
-		cout << "	-shotcut" << endl << "	-pitivi" << endl;
-		exit(0);
-	} else if (argc == 2) {
-		cout << "Fatal error: no path or instruction given" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl;
 		exit(4);
 	}
 	
-	path = arga[1];
-	for (i1 = 0; i1 < argv.size(); i1++) {
-		c1 = argv.at(i1).at(0);
-		if (c1 == '[') {
+	bool fclipr = false; // found clipper
+	string tempargs;
+	for (i1 = 1; i1 < argv.size(); i1++) {
+		c1 = argv.at(i1).at(0); // for checking for [ and - later
+		if (argv.at(i1).find("--help") == 0 or argv.at(i1).at(0) == '?' or argv.at(i1).find("-help") == 0 or (argv.at(i1).find("-h") == 0 and argv.at(i1).size() < 3)) {
+			cout << endl << "First, enter the file path. ex. -i \"/home/user/Videos/myvid.mp4\" Then, enter one of the options listed below and select an editor;" << endl;
+			for (i4 = 0; i4 < plugls.size(); i4++) {
+				cout << '	' << plugls.at(i4).name << ' ' << plugls.at(i4).call << endl;
+				for (i1 = 0; i1 < size(plugls.at(i4).help); i1++) {
+					cout << "		";
+					if (i1 == size(plugls.at(i4).help) - 1) {
+						cout << "Example command: ";
+					}
+				cout << plugls.at(i4).help.at(i1) << endl;
+			}
+		}
+		cout << "Currently the editors available are;" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl;
+		exit(0);
+		} else if (argv.at(i1).find("-i") == 0) {
+			i1++; path = argv.at(i1); // get the file path after "-i"
+		} else if (c1 == '[') {
 			c1 = argv.at(i1).at(argv.at(i1).size() - 1);
 			if (c1 == ']') {
 				s1 = argv.at(i1);
@@ -620,27 +633,30 @@ int main(int argc, const char * arga[]) {
 					}
 				}
 			}
-			if (not fclipr) {
-				cout << "Fatal error: clipper not found" << endl;
+		} else if (c1 == '-') {
+			if (argv.at(i1).find("-overwrite") == 0) {overwrite = true;}
+			else {
+				cout << "Fatal error: unrecognized option: " << argv.at(i1) << endl;
 				exit(4);
 			}
-		} else if (c1 == '-') {
-			if (argv.at(i1).find("-shotcut") == 0) {shotcutb = true;}
-			else if (argv.at(i1).find("-pitivi") == 0) {pitivib = true;}
-			else if (argv.at(i1).find("-overwrite") == 0) {overwrite = true;}
-		}
+		} else if (argv.at(i1).find("shotcut") == 0) {shotcutb = true;}
+		else if (argv.at(i1).find("pitivi") == 0) {pitivib = true;}
+	}
+	if (not fclipr) {
+		cout << "Fatal error: clipper not found" << endl;
+		exit(4);
 	}
 	if (not shotcutb and not pitivib) {
 		cout << "Fatal error: no editor selected" << endl;
 		exit(4);
 	}
-
-	c1 = path[0];
+	
+	c1 = path.at(0);
 	if (c1 == '\'') {path.erase(0, 1);} // remove quotation marks sorrounding path, if any
 	else if (c1 == '\"') {path.erase(0, 1);}
 	reverse(path.begin(), path.end());
 	
-	c1 = path[0];
+	c1 = path.at(0);
 	if (c1 == '\'') {path.erase(0, 1);}
 	else if (c1 == '\"') {path.erase(0, 1);}
 	reverse(path.begin(), path.end());
@@ -742,7 +758,7 @@ void shotcut() { // Shotcut/MLT XML format
 	float prolenm1 = 0.0; // project length minus 1 frame
 	float prolen = 0.0; // total project length
 
-	cout << "Filtering..." << endl;
+	cout << "Filtering: 0/" << clparr.size() / 2;
 	i1 = 0;
 	long long unsigned int fltnum = 0;
 	for (i4 = 0; i4 < clparr.size(); i4 = i4 + 2) {
@@ -833,6 +849,7 @@ void shotcut() { // Shotcut/MLT XML format
 		out.push_back("  </chain>");
 
 		i1++;
+		cout << "\r" << "Filtering: " << i1 << "/" << clparr.size() / 2;
 	}
 
 	for (i1 = 0; i1 < playlist.size(); i1++) {
@@ -897,7 +914,7 @@ void shotcut() { // Shotcut/MLT XML format
 	}
 	wrtmlt.close();
 
-	cout << "Done!" << endl;
+	cout << endl << "Done!" << endl;
 
 	exit(0);
 }

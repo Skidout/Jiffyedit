@@ -6,31 +6,36 @@ b=~
 path=$1
 
 exe="/usr/lib/jiffyedit/jiffyedit-master"
+cd /usr/lib/jiffyedit
+echo $@
+e=false
+for (( i = 1; i <= $#; i++ )) do
+	s=${*:i}
+	if [ ${s:0:2} == '-i' ]; then
+		e=true
+	elif [ $e == true ]; then
+		path=$s
+		if [ ${path:0:2} == './' ]; then
+			n=$i-1
+			m=$i+1
+			path="${*:i}"
+			path=$(echo "$path" | sed 's/^.//')
+			"$exe" "${*:1:$n}" "$a""$path"
+			exit 0
+		elif [ ${path:0:2} == '~/' ]; then
+			path=$(echo "$path" | sed 's/^~//')
+			"$exe" "\"$b$path\""
+			exit 0
+		elif [ ${path:0:1} == '/' ]; then
+			"$exe" $*
+			exit 0
+		elif [ $e == true ]; then
+			n=$i-1
+			"$exe" "${*:1:$n}" "$a/""${*:$i}"
+			exit 0
+		fi
+	fi
+done
 
-if [ ${path:0:1} == '?' ]; then
-	path=$(echo "$path" | sed 's/^.//')
-	"$exe" ?
-	exit 0
-fi
+"$exe" "$@"
 
-c=$*
-
-c="${c//$path/}"
-
-d=${c:0:1}
-
-if [ ${path:0:2} == './' ]; then
-	path=$(echo "$path" | sed 's/^.//')
-	"$exe" "\"$a$path\""$c
-	exit 0
-elif [ ${path:0:2} == '~/' ]; then
-	path=$(echo "$path" | sed 's/^~//')
-	echo ~
-	"$exe" "\"$b$path\""$c
-	exit 0
-elif [ ${path:0:1} == '/' ]; then
-	"$exe" "\"$path\""$c
-	exit 0
-fi
-
-"$exe" "\"$a/$path\""$c
