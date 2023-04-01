@@ -9,7 +9,7 @@ namespace fs = std::filesystem; // this sets it so that you can use fs:: instead
 
 long long int boool /* int used to check whether string contains substring */;
 string outpath, ismeta, totlen, width, height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei;
-bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false;
+bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false, losslessb = false;
 unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, i4, len, clpint; // clipper int
 float f3, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
 vector <float> clparr; // timestamps where 0 is begin, 1 is end, 2 is begin and so on
@@ -86,6 +86,41 @@ string toanatim(float totimvar, int precision) { // to analogue time
 	getline(wrttim, result);
 
 	return result;
+}
+
+void lossless() {
+	vector <string> out;
+	
+	if (fltarr.size() > 0) {
+		cout << endl << "Warning: filters are not supported by losslesscut." << endl;
+	}
+	
+	cout << "Writing llc file..." << endl;
+	
+	out.push_back("{");
+	out.push_back("  version: 1,");
+	out.push_back(replace("  mediaFileName: 'PATH',", "PATH", path));
+	out.push_back("  cutSegments: [");
+	
+	for (i1 = 0; i1 < clparr.size(); i1 = i1 + 2) {
+		out.push_back("    {");
+		out.push_back(replace("      start: START,", "START", to_string(clparr.at(i1))));
+		out.push_back(replace("      end: END,", "END", to_string(clparr.at(i1 + 1))));
+		out.push_back("      name: '',");
+		out.push_back("    },");
+	}
+
+	out.push_back("  ],");
+	out.push_back("}");
+
+	ofstream wrtllc(outpath);
+	for (i1 = 0; i1 < out.size(); i1++) {
+		wrtllc << out.at(i1) << endl;
+	}
+	wrtllc.close();
+	
+	cout << "Done!" << endl;
+	exit(0);
 }
 
 void pitivi() {
@@ -421,6 +456,7 @@ void reader() {
 
 	if (shotcutb) {shotcut();}
 	if (pitivib) {pitivi();}
+	if (losslessb) {lossless();}
 }
 
 int main(int argc, const char * arga[]) {
@@ -550,11 +586,11 @@ int main(int argc, const char * arga[]) {
 			}
 		}
 		cout << "Currently the editors available are;" << endl;
-		cout << "	shotcut" << endl << "	pitivi" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl;
 		exit(4);
 	}
 	
-	bool fclipr = false; // found clipper
+	bool fclipr = false, finput = false; // found clipper, found input
 	string tempargs;
 	for (i1 = 1; i1 < argv.size(); i1++) {
 		c1 = argv.at(i1).at(0); // for checking for [ and - later
@@ -571,10 +607,11 @@ int main(int argc, const char * arga[]) {
 			}
 		}
 		cout << "Currently the editors available are;" << endl;
-		cout << "	shotcut" << endl << "	pitivi" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl;
 		exit(0);
 		} else if (argv.at(i1).find("-i") == 0) {
 			i1++; path = argv.at(i1); // get the file path after "-i"
+			finput = true;
 		} else if (c1 == '[') {
 			c1 = argv.at(i1).at(argv.at(i1).size() - 1);
 			if (c1 == ']') {
@@ -586,7 +623,7 @@ int main(int argc, const char * arga[]) {
 				for (i2 = 0; i2 < plugls.size(); i2++) {
 					if (plugls.at(i2).call.find(argv.at(i1)) == 0 and not plugls.at(i2).filter) {
 						if (fclipr) {
-							cout << "Fatal error: two clippers selected: " << argv.at(i1) << "/" << plugls.at(clpint).call << endl;
+							cout << "Fatal error: two clippers selected: " << argv.at(i1) << " & " << plugls.at(clpint).call << endl;
 							exit(4);
 						}
 						clpint = i2;
@@ -607,7 +644,7 @@ int main(int argc, const char * arga[]) {
 				for (i2 = 0; i2 < plugls.size(); i2++) {
 					if (plugls.at(i2).call.find(s1) == 0 and not plugls.at(i2).filter) {
 						if (fclipr) {
-							cout << "Fatal error: two clippers selected: " << argv.at(i1) << "/" << plugls.at(clpint).call << endl;
+							cout << "Fatal error: two clippers selected: " << argv.at(i1) << " & " << plugls.at(clpint).call << endl;
 							exit(4);
 						}
 						clpint = i2;
@@ -641,14 +678,18 @@ int main(int argc, const char * arga[]) {
 			}
 		} else if (argv.at(i1).find("shotcut") == 0) {shotcutb = true;}
 		else if (argv.at(i1).find("pitivi") == 0) {pitivib = true;}
+		else if (argv.at(i1).find("losslesscut") == 0) {losslessb = true;}
 	}
 	if (not fclipr) {
-		cout << "Fatal error: clipper not found" << endl;
+		cout << "Fatal error: clipper not found." << endl;
 		exit(4);
 	}
-	if (not shotcutb and not pitivib) {
-		cout << "Fatal error: no editor selected" << endl;
+	if (not shotcutb and not pitivib and not losslessb) {
+		cout << "Fatal error: no editor selected." << endl;
 		exit(4);
+	}
+	if (not finput) {
+		cout << "Fatal error: no input found." << endl;
 	}
 	
 	c1 = path.at(0);
@@ -679,6 +720,9 @@ int main(int argc, const char * arga[]) {
 	}
 	if (pitivib) {
 		s1 = "segx";
+	}
+	if (losslessb) {
+		s1 = "cll.jorp-";
 	}
 	s1.append(outpath);
 	outpath = s1;

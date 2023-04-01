@@ -1,7 +1,7 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit
-pkgver=1.3.4.9
+pkgver=1.4.5.11
 pkgrel=1
 pkgdesc="Automate video editing tasks for Shotcut and Pitivi."
 arch=(x86_64)
