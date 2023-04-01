@@ -8,12 +8,13 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   Enter ?, -h, -help, or --help for help, if you need it.
   The command will be all one line, structured like this:
   
-    (path of file) [plugin name] -editor
-    ex. jiffyedit /home/user/Videos/myvid.mp4 [sr] [st] -shotcut
-    or jiffyedit /home/user/Videos/myvid.mp4 [sr db 25 mt 0.5 bf 0.4 ] [st dur 0.2 ] -pitivi
+    -i (path of file) [plugin name] editor
+    ex. jiffyedit -i myvid.mp4 [sr] [st] shotcut
+    or jiffyedit -i /home/user/Videos/myvid.mp4 [sr db 25 mt 0.5 bf 0.4 ] [st dur 0.2 ] pitivi
    
   Where (path of file) is the path of the video file you want to remove silence from.
   In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
+  Remember to put -i before the file. The shell script used to call the actual executable will make sure the file path is properly passed.
   
   [sr] Silence Remove - cut video to only the parts where the audio is as loud as specified.
   
@@ -31,6 +32,8 @@ Also note: This is an early version. Expect a few bugs and for things to change.
 ## Installation Instructions:
 
 ###  Linux:
+
+  If using Arch, install via the PKGBUILD. If you had it installed before the filter update, remember to remove it first.
 
   You must have GCC & FFmpeg installed. You may uninstall GCC after installation is complete.
   You do not need root permissions for the alternative installations.
@@ -73,11 +76,12 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
+ - Add support for LosslessCut
  - Fix bugs.
 
 ### For potential contributors:
 
-  The best way you can contribute is to add support for the editor you use or to make your own plugins. I want to keep the number of plugins on this repo to the two that are here, but I have thought about making another repo that would contain clippers that have full support and are up to date but don't come packaged by default. This repo would probably still be restricted to C++. If you have your own plugin you want to contribute to this repo, if you are willing to license it under GPL3, please get in touch with me via email.
+  The best way you can contribute is to add support for the editor you use or to make your own plugins. I want to keep the number of plugins on this repo to the two that are here, but I have thought about making another repo that would contain clippers that have full support and are up to date but don't come packaged by default. This repo would probably still be restricted to C++. If you have your own plugin you want to contribute to this repo, if you are willing to license it under GPL3, please get in touch with me via email at Skidout@proton.me.
  
 ### Developer Documentation:
   In order to make and use a plugin, it needs a few things.
