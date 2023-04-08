@@ -1,4 +1,4 @@
-# Jiffyedit: Automate video editing tasks for Shotcut, Pitivi, and LosslessCut.
+# Jiffyedit: Automate video editing tasks for Shotcut, Pitivi, LosslessCut, and Vidcutter.
 
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
