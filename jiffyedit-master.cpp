@@ -9,7 +9,7 @@ namespace fs = std::filesystem; // this sets it so that you can use fs:: instead
 
 long long int boool /* int used to check whether string contains substring */;
 string outpath, ismeta, totlen, width, height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei;
-bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false, losslessb = false;
+bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false, losslessb = false, vidcutb = false;
 unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, i4, len, clpint; // clipper int
 float f3, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
 vector <float> clparr; // timestamps where 0 is begin, 1 is end, 2 is begin and so on
@@ -88,6 +88,32 @@ string toanatim(float totimvar, int precision) { // to analogue time
 	return result;
 }
 
+void vidcut() {
+	vector <string> out;
+	
+	cout << "Generating VCP file..." << endl;
+	
+	if (fltarr.size() > 0) {
+		cout << endl << "Warning: Vidcutter does not support filters." << endl;
+	}
+	
+	out.push_back(path);
+	for (i1 = 0; i1 < clparr.size(); i1 = i1 + 2) {
+		s1 = "START	END	0	\"\"";
+		s1 = replace(s1, "START", to_string(clparr.at(i1)));
+		out.push_back(replace(s1, "END", to_string(clparr.at(i1 + 1))));
+	}
+	
+	ofstream wrtvcp(outpath);
+	for (i1 = 0; i1 < out.size(); i1++) {
+		wrtvcp << out.at(i1) << endl;
+	}
+	wrtvcp.close();
+	
+	cout << "Done!" << endl;
+	exit(0);
+}
+
 void lossless() {
 	vector <string> out;
 	
@@ -95,7 +121,7 @@ void lossless() {
 		cout << endl << "Warning: filters are not supported by losslesscut." << endl;
 	}
 	
-	cout << "Writing llc file..." << endl;
+	cout << "Writing LLC file..." << endl;
 	
 	out.push_back("{");
 	out.push_back("  version: 1,");
@@ -457,6 +483,7 @@ void reader() {
 	if (shotcutb) {shotcut();}
 	if (pitivib) {pitivi();}
 	if (losslessb) {lossless();}
+	if (vidcutb) {vidcut();}
 }
 
 int main(int argc, const char * arga[]) {
@@ -679,12 +706,13 @@ int main(int argc, const char * arga[]) {
 		} else if (argv.at(i1).find("shotcut") == 0) {shotcutb = true;}
 		else if (argv.at(i1).find("pitivi") == 0) {pitivib = true;}
 		else if (argv.at(i1).find("losslesscut") == 0) {losslessb = true;}
+		else if (argv.at(i1).find("vidcutter") == 0) {vidcutb = true;}
 	}
 	if (not fclipr) {
 		cout << "Fatal error: clipper not found." << endl;
 		exit(4);
 	}
-	if (not shotcutb and not pitivib and not losslessb) {
+	if (not shotcutb and not pitivib and not losslessb and not vidcutb) {
 		cout << "Fatal error: no editor selected." << endl;
 		exit(4);
 	}
@@ -722,7 +750,11 @@ int main(int argc, const char * arga[]) {
 		s1 = "segx";
 	}
 	if (losslessb) {
+		outpath.erase(0, 1);
 		s1 = "cll.jorp-";
+	}
+	if (vidcutb) {
+		s1 = "pcv";
 	}
 	s1.append(outpath);
 	outpath = s1;
