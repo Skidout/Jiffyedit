@@ -7,10 +7,9 @@
 using namespace std;
 namespace fs = std::filesystem; // this sets it so that you can use fs:: instead of filesystem::
 
-long long int boool /* int used to check whether string contains substring */;
-string outpath, ismeta, totlen, width, height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei;
-bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false, losslessb = false, vidcutb = false;
-unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, i4, len, clpint; // clipper int
+string outpath, ismeta, totlen, width, progress = "\r", /* so that the progress is not reset to the beginning of the line if specified with -no-reset */ height, dur, /* full duration of clip including last frame */ durm1, /* the second to last frame (needed for some reason) */ clspc, /* colorspace */ aspwid, /* aspect width string */ asphei;
+bool hasres = false, fheight = false /* ound height indicator */, fwidth = false, fclsp = false, shotcutb = false, pitivib = false, overwrite = false, losslessb = false, vidcutb = false, openshotb = false;
+unsigned long long int aspwidi, /* aspect ratio width int */ aspheii, i4, vbsden, /* video base denominator */ vbsnum, absden, absnum, abr, /* audio bitrate */ vbr, chanls /* audio channel count */, clpint; // clipper int
 float f3, fpsnum, fpsden, onefrm; // how often a new frame occurs in seconds
 vector <float> clparr; // timestamps where 0 is begin, 1 is end, 2 is begin and so on
 
@@ -86,6 +85,353 @@ string toanatim(float totimvar, int precision) { // to analogue time
 	getline(wrttim, result);
 
 	return result;
+}
+
+void openshot() {
+	vector <string> out;
+	
+	cout << "Generating OSP file..." << endl;
+	
+	out.push_back("{");
+	out.push_back(replace(" \"id\": \"PATH\",", "PATH", path));
+	out.push_back(" \"fps\": {");
+	out.push_back(replace("  \"num\": FPSNUM,", "FPSNUM", to_string(fpsnum)));
+	out.push_back(replace("  \"den\": FPSDEN", "FPSDEN", to_string(fpsden)));
+	out.push_back(" },\n \"display_ratio\": {");
+	out.push_back(replace("  \"num\": ASPWID,", "ASPWID", aspwid));
+	out.push_back(replace("  \"den\": ASPHEI", "ASPHEI", asphei));
+	out.push_back(" },\n \"pixel_ratio\": {\n  \"num\": 1,\n  \"den\": 1\n },");
+	out.push_back(replace(" \"width\": WIDTH,", "WIDTH", width));
+	out.push_back(replace(" \"height\": HEIGHT,", "HEIGHT", height));
+	out.push_back("\n \"settings\": {},\n \"clips\": [");
+	
+	float prolen = 0.0;
+	int clpnum = 0;
+	for (i1 = 0; i1 < clparr.size(); i1 = i1 + 2) {
+		out.push_back("  {\n   \"alpha\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"anchor\": 0,\n   \"channel_filter\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"channel_mapping\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"display\": 0,");
+		stringstream wrtdur;
+		wrtdur << fixed << setprecision(14) << secdur;
+		getline(wrtdur, s1);
+		out.push_back(replace("   \"duration\": DUR,", "DUR", dur));
+		
+		out.push_back("   \"effects\": [],");
+		
+		stringstream wrtend;
+		wrtend << fixed << setprecision(14) << clparr.at(i1 + 1);
+		getline(wrtend, s1);
+		out.push_back(replace("   \"end\": END,", "END", s1));
+		
+		out.push_back("   \"gravity\": 4,\n   \"has_audio\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"has_video\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },");
+		
+		out.push_back(replace("   \"id\": \"ID\",", "ID", to_string(clpnum)));
+		
+		out.push_back("   \"layer\": 5000000,\n   \"location_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 0.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"location_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 0.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"mixing\": 0,\n   \"origin_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 0.5\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"origin_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 0.5\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"parentObjectId\": \"\",\n   \"perspective_c1_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c1_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c1_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,"); // starting a new one here because IDE is acting up
+		out.push_back("      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c2_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c2_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c3_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c3_y\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c4_x\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"perspective_c4_y\":\n   {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },");
+		out.push_back("      \"interpolation\": 0\n     }\n    ]\n   },\n      \"handle_type\": 0,");
+		
+		out.push_back(replace("   \"position\": PROLEN,", "PROLEN", to_string(prolen)));
+		
+		out.push_back("   \"reader\": {");
+		
+		out.push_back(replace("    \"audio_bit_rate\": ABR,", "ABR", to_string(abr)));
+		
+		out.push_back("    \"audio_stream_index\": 1,\n    \"audio_timebase\": {");
+		
+		out.push_back(replace("     \"den\": ABSDEN,", "ABSDEN", to_string(absden)));
+		out.push_back(replace("     \"num\": ABSNUM", "ABSNUM", to_string(absnum)));
+		out.push_back("    },");
+		if (chanls == 2) {
+			out.push_back("    \"channel_layout\": 3,");
+		} else if (chanls == 1) {
+			out.push_back("    \"channel_layout\": 4,");
+		} else {
+			out.push_back("    \"channel_layout\": 63,");
+		}
+		out.push_back(replace("    \"channels\": CHANLS,", "CHANLS", to_string(chanls)));
+		
+		out.push_back("    \"display_ratio\": {");
+    
+		out.push_back(replace("     \"den\": ASPHEI,", "ASPHEI", asphei));
+		out.push_back(replace("     \"num\": 16", "ASPWID", aspwid));
+		
+		out.push_back("    },");
+		
+		stringstream getdur;
+		getdur << fixed << setprecision(14) << secdur;
+		getline(getdur, s1);
+		out.push_back(replace("    \"duration\": DUR,", "DUR", s1));
+		out.push_back(replace("    \"file_size\": \"FSIZE\",", "FSIZE", to_string(fs::file_size(path))));
+
+		out.push_back("    \"fps\": {");
+		
+		temp = fpsden;
+		out.push_back(replace("     \"den\": FPSDEN,", "FPSDEN", to_string(temp)));
+		temp = fpsnum;
+		out.push_back(replace("     \"num\": FPSNUM", "FPSNUM", to_string(temp)));
+		
+		out.push_back("    },\n    \"has_audio\": true,\n    \"has_single_image\": false,\n    \"has_video\": true,");
+		
+		out.push_back(replace("    \"height\": HEIGHT,", "HEIGHT", height));
+		/* openshot seems to have broken so ill leave this here just in case it getsd fixed in the future
+        out.push_back("    "interlaced_frame": false,
+    "metadata": {
+     "compatible_brands": "isomiso2avc1mp41",
+     "encoder": "Lavf59.27.100",
+     "handler_name": "SoundHandler",
+     "language": "und",
+     "major_brand": "isom",
+     "minor_version": "512"
+    },
+    "path": "./audiotest.mp4",
+    "pixel_format": 0,
+    "pixel_ratio": {
+     "den": 1,
+     "num": 1
+    },
+    "sample_rate": 48000,
+    "top_field_first": true,
+    "type": "FFmpegReader",
+    "vcodec": "h264",
+    "video_bit_rate": 1088632,
+    "video_length": "1271",
+    "video_stream_index": 0,
+    "video_timebase": { ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams v:0 INPUT
+     "den": 30000000,
+     "num": 1
+    },
+    "width": 1920
+   },
+   "rotation": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 0.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "scale": 1,
+   "scale_x": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 1.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "scale_y": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 1.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "shear_x": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 0.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "shear_y": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 0.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "start": 0,
+   "time": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 1.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "volume": {
+    "Points": [
+     {
+      "co": {
+       "X": 1.0,
+       "Y": 1.0
+      },
+      "handle_left": {
+       "X": 0.5,
+       "Y": 1.0
+      },
+      "handle_right": {
+       "X": 0.5,
+       "Y": 0.0
+      },
+      "handle_type": 0,
+      "interpolation": 0
+     }
+    ]
+   },
+   "wave_color": {
+    "alpha": {
+     "Points": [
+      {
+       "co": {
+        "X": 1.0,
+        "Y": 255.0
+       },
+       "handle_left": {
+        "X": 0.5,
+        "Y": 1.0
+       },
+       "handle_right": {
+        "X": 0.5,
+        "Y": 0.0
+       },
+       "handle_type": 0,
+       "interpolation": 0
+      }
+     ]
+    },
+    "blue": {
+     "Points": [
+      {
+       "co": {
+        "X": 1.0,
+        "Y": 255.0
+       },
+       "handle_left": {
+        "X": 0.5,
+        "Y": 1.0
+       },
+       "handle_right": {
+        "X": 0.5,
+        "Y": 0.0
+       },
+       "handle_type": 0,
+       "interpolation": 0
+      }
+     ]
+    },
+    "green": {
+     "Points": [
+      {
+       "co": {
+        "X": 1.0,
+        "Y": 123.0
+       },
+       "handle_left": {
+        "X": 0.5,
+        "Y": 1.0
+       },
+       "handle_right": {
+        "X": 0.5,
+        "Y": 0.0
+       },
+       "handle_type": 0,
+       "interpolation": 0
+      }
+     ]
+    },
+    "red": {
+     "Points": [
+      {
+       "co": {
+        "X": 1.0,
+        "Y": 0.0
+       },
+       "handle_left": {
+        "X": 0.5,
+        "Y": 1.0
+       },
+       "handle_right": {
+        "X": 0.5,
+        "Y": 0.0
+       },
+       "handle_type": 0,
+       "interpolation": 0
+      }
+     ]
+    }
+   },
+   "waveform": false,
+   "file_id": "W9N9H4K71B",
+   "title": "audiotest.mp4",
+   "image": "@assets/thumbnail/W9N9H4K71B.png"
+  },*/
+		clpnum++;
+	}
 }
 
 void vidcut() {
@@ -300,7 +646,7 @@ void pitivi() {
 		out.push_back("        </clip>");
 		
 		i2++;
-		cout << "\r" << "Filtering: " << i1 / 2 + 1 << "/" << clparr.size() / 2;
+		cout << progress << "Filtering: " << i1 / 2 + 1 << "/" << clparr.size() / 2;
 	}
 	
 	out.push_back("      </layer>");
@@ -465,7 +811,76 @@ void reader() {
 		cout << "Fatal error: No clips from clipper: " << plugls.at(clpint).name << " with call: " << plugls.at(clpint).call << endl;
 		exit(6);
 	}
+	
+	FILE * inchan;
+	
+	string cmd5 = replace("ffprobe -v error -show_entries stream=channel_layout -of csv=p=0 PATH", "PATH", path);
+	
+	s1 = "";
+	if ((inchan = popen(cmd5.c_str(), "r"))) {
+		while (fgets(buf, 1024, inchan)) {
+			s1.append(buf);
+			s1.pop_back();
+		}
+	}
+	pclose(inchan);
+	if (s1.find("5.1") == 0) {chanls = 6;}
+	else if (s1.find("stereo") == 0) {chanls = 2;} 
+	else if (s1.find("mono") == 0) {chanls = 1;} 
+	else {chanls = 6;}
+	
+	FILE * invbse; // get video timebase
+	
+	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams v:0 PATH", "PATH", path);
+	
+	if ((invbse = popen(s1.c_str(), "r"))) {
+		while (fgets(buf, 1024, invbse)) {
+			s1 = buf;
+		}
+	}
+	pclose(invbse);
+	
+	stringstream getvbs;
+	getvbs << replace(s1, "/", " ");
+	getvbs >> vbsnum >> vbsden;
+	
+	FILE * inabse; // get audio timebase
+	
+	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams a:0 PATH", "PATH", path);
+	
+	if ((inabse = popen(s1.c_str(), "r"))) {
+		while (fgets(buf, 1024, inabse)) {
+			s1 = buf;
+		}
+	}
+	pclose(inabse);
+	
+	FILE * invbr; // get video bitrate
+	
+	s1 = replace("ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 PATH", "PATH", path);
+	
+	if ((invbr = popen(s1.c_str(), "r"))) {
+		while (fgets(buf, 1024, invbr)) {
+			vbr = stoi(buf);
+		}
+	}
+	pclose(invbr);
+	
+	FILE * inabr; // get audio bitrate
+	
+	s1 = replace("ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 PATH", "PATH", path);
+	
+	if ((inabr = popen(s1.c_str(), "r"))) {
+		while (fgets(buf, 1024, inabr)) {
+			abr = stoi(buf);
+		}
+	}
+	pclose(inabr);
 
+	stringstream getabs;
+	getabs << replace(s1, "/", " ");
+	getabs >> absnum >> absden;
+	
 	int wid = stoi(width);
 	int hei = stoi(height);
 	temp = __gcd(wid, hei);
@@ -481,12 +896,82 @@ void reader() {
 	getline(gethei, asphei);
 
 	if (shotcutb) {shotcut();}
-	if (pitivib) {pitivi();}
-	if (losslessb) {lossless();}
-	if (vidcutb) {vidcut();}
+	else if (pitivib) {pitivi();}
+	else if (losslessb) {lossless();}
+	else if (vidcutb) {vidcut();}
+	else if (openshotb) {openshot();}
 }
 
 int main(int argc, const char * arga[]) {
+
+	vector <string> argv;
+	
+	for (i1 = 0; i1 < argc; i1++) { // convert arguments to safe format
+		argv.push_back(arga[i1]);
+	}
+	
+	for (i1 = 0; i1 < argv.size(); i1++) { // get the full path of the input
+		if (argv.at(i1).find("-i") == 0) {
+			i1++;
+			if (argv.at(i1).find("/") == 0) {break;}
+			else if (argv.at(i1).find(":/") == 1) {break;} // windows full paths
+			else if (argv.at(i1).find("./") == 0) {
+				argv.at(i1).erase(0, 1);
+				
+				s1 = fs::current_path().generic_string();
+	            
+				c1 = s1.at(0);
+				if (c1 == '\'') {path.erase(0, 1);} // remove quotation marks sorrounding path, if any
+				else if (c1 == '\"') {path.erase(0, 1);}
+				reverse(path.begin(), path.end());
+	
+				c1 = s1.at(0);
+				if (c1 == '\'') {path.erase(0, 1);}
+				else if (c1 == '\"') {path.erase(0, 1);}
+				reverse(path.begin(), path.end());
+				argv.at(i1).insert(0, s1);
+				break;
+			} else if (argv.at(i1).find("~/") == 0) {
+				argv.at(i1).erase(0, 1);
+				
+				FILE * inuser; // get user directory
+				
+				char buf[1025];
+				
+				if ((inuser = popen("echo ~", "r"))) {
+					while (fgets(buf, 1024, inuser)) {
+						argv.at(i1).insert(0, buf);
+					}
+				}
+				break;
+			} else {
+				s1 = fs::current_path().generic_string();
+	            
+				c1 = s1.at(0);
+				if (c1 == '\'') {path.erase(0, 1);} // remove quotation marks sorrounding path, if any
+				else if (c1 == '\"') {path.erase(0, 1);}
+				reverse(path.begin(), path.end());
+	
+				c1 = s1.at(0);
+				if (c1 == '\'') {path.erase(0, 1);}
+				else if (c1 == '\"') {path.erase(0, 1);}
+				reverse(path.begin(), path.end());
+				argv.at(i1).insert(0, "/");
+				argv.at(i1).insert(0, s1);
+				break;
+			}
+		}
+	}
+	
+	cout << argv.at(i1) << endl;
+	
+	#ifdef __linux__
+        fs::path wrkdir("/usr/lib/jiffyedit"); // working directory for linux
+	#endif // working directories for other OS' can be added later
+	
+	fs::current_path(wrkdir); // set working directory
+	
+	cout << fs::current_path() << endl;
 
 	vector <string> ls; 
 	stringstream getls; 
@@ -584,19 +1069,13 @@ int main(int argc, const char * arga[]) {
 		fs::path tempath(s1);
 
 		if (not fs::exists(tempath)) {
-			cout << "Error: Executable does not exist for " << plugls.at(i4).name << " with call: " << plugls.at(i4).call << endl << "You cannot use " << plugls.at(i4).name << endl;
+			cout << "Warning: Executable does not exist for " << plugls.at(i4).name << " with call: " << plugls.at(i4).call << endl << "You cannot use " << plugls.at(i4).name << endl;
 			auto iter = plugls.begin();
 			for (i2 = 0; i2 < i4; i2++) { // convert int to iterator
 				iter++;
 			}
 			plugls.erase(iter);
 		} 
-	}
-
-	vector <string> argv;
-	
-	for (i1 = 0; i1 < argc; i1++) { // convert arguments to safe format
-		argv.push_back(arga[i1]);
 	}
 	
 	if (argv.size() < 2) {
@@ -613,7 +1092,7 @@ int main(int argc, const char * arga[]) {
 			}
 		}
 		cout << "Currently the editors available are;" << endl;
-		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl << "	vidcutter" << endl;
 		exit(4);
 	}
 	
@@ -634,7 +1113,7 @@ int main(int argc, const char * arga[]) {
 			}
 		}
 		cout << "Currently the editors available are;" << endl;
-		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl;
+		cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl << "	vidcutter" << endl;
 		exit(0);
 		} else if (argv.at(i1).find("-i") == 0) {
 			i1++; path = argv.at(i1); // get the file path after "-i"
@@ -699,6 +1178,7 @@ int main(int argc, const char * arga[]) {
 			}
 		} else if (c1 == '-') {
 			if (argv.at(i1).find("-overwrite") == 0) {overwrite = true;}
+			else if (argv.at(i1).find("-no-reset") == 0) {progress = "\n";}
 			else {
 				cout << "Fatal error: unrecognized option: " << argv.at(i1) << endl;
 				exit(4);
@@ -925,7 +1405,7 @@ void shotcut() { // Shotcut/MLT XML format
 		out.push_back("  </chain>");
 
 		i1++;
-		cout << "\r" << "Filtering: " << i1 << "/" << clparr.size() / 2;
+		cout << progress << "Filtering: " << i1 << "/" << clparr.size() / 2;
 	}
 
 	for (i1 = 0; i1 < playlist.size(); i1++) {

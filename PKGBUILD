@@ -1,9 +1,9 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit
-pkgver=1.5.5.12
+pkgver=1.4.5.13
 pkgrel=1
-pkgdesc="Automate video editing tasks for Shotcut and Pitivi."
+pkgdesc="Automate video editing tasks for Shotcut, Pitivi, Losslesscut, and Vidcutter."
 arch=(x86_64)
 url="https://github.com/Skidout/Jiffyedit"
 license=('GPL3')
@@ -22,10 +22,9 @@ build() {
 
 package() {
 	cd "$pkgname"
-	install -D jiffyedit -t ${pkgdir}/usr/bin
 	install -D jiffyedit-sr -t ${pkgdir}/usr/lib/jiffyedit
 	install -D jiffyedit-st -t ${pkgdir}/usr/lib/jiffyedit
 	install -D jiffyedit-sr.dat -t ${pkgdir}/usr/lib/jiffyedit
 	install -D jiffyedit-st.dat -t ${pkgdir}/usr/lib/jiffyedit
-	install -D jiffyedit-master -t ${pkgdir}/usr/lib/jiffyedit
+	install -D jiffyedit-master -t ${pkgdir}/usr/bin
 }
