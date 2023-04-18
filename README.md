@@ -68,7 +68,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     
 ###  Mac:
   
-    Should be similar to Linux, but the shell script may not work.
+    Should be similar to Linux, but you may have to change where the plugins are located and change the working directory. If so, please do so using #ifdef and commit the change to this repo.
   
 
 ### Known bugs and tips:
@@ -76,7 +76,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
- - Add support for Openshot
+// - Add support for Openshot // to be reevaluated, editor broke
  - Make GUI
  - Fix bugs
 
