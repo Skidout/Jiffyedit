@@ -40,11 +40,10 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   Download all the necessary files.
   Navigate to where you downloaded the files in the terminal.
   
-    sudo install -D jiffyedit -t /usr/bin
-    g++ -Ofast jiffyedit-master.cpp -o jiffyedit-master
+    g++ -Ofast jiffyedit-master.cpp -o jiffyedit
     g++ -Ofast jiffyedit-sr.cpp -o jiffyedit-sr
     g++ -Ofast jiffyedit-st.cpp -o jiffyedit-st
-    sudo install -D jiffyedit-master -t /usr/lib/jiffyedit
+    sudo install -D jiffyedit -t /usr/bin
     sudo install -D jiffyedit-sr -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-st -t /usr/lib/jiffyedit
     sudo install -D jiffyedit-sr.dat -t /usr/lib/jiffyedit
@@ -63,7 +62,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   
 ###  Windows:
   
-    Find a C++17 or later compiler, compile it, then you're on your own after that. Keep in mind that the program itself requires the full path of the video file to be passed, and for all the clippers to be in the same directory as the master program, and it needs to be active in that directory. You might also need to specify the executable files as .exe in the .dat files.
+    Find a C++17 or later compiler, compile it, then you're on your own after that. Keep in mind that the program itself requires the full path of the video file to be passed, and for all the clippers to be in the same directory as the master program, and it needs to be active in that directory. You might also need to specify the executable files as .exe in the .dat files. You will need to add an #ifdef for windows as well.
 
     
 ###  Mac:
@@ -136,6 +135,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     ex. /home/user/Videos/myvid.mp4 shotcut 4.067 8.678 3/50
     
   LosslessCut does not support filters.
+  Vidcutter also does not support filters.
 
   For both types of plugins, you can put "Fatal error: " at the beginning of any line, followed by an error message, to end the execution of the master program, should you encounter an error which cannot be fixed during execution. This line will be passed to the user.
   Any lines that a clipper outputs that do not use the format should be passed to the user.
