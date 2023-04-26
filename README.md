@@ -21,6 +21,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     bf # - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Must be a decimal number Default 0.3s.
     mt # - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips Must be a decimal Default 0.5s.
     db # - Audio level for when silence ends and clips begin. Must NOT be a decimal. Default -20dB.
+    smt # - Set minimum silence time. Helps to avoid having clips that are very close to each other, making them one clip instead. Cannot be less than two times buffer. Default two times buffer.
     
   [st] Smooth Transitions - add a fade-to-silence transition between clips to help ease the audio awkwardness.
   
@@ -76,6 +77,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   
 ### Roadmap:
 // - Add support for Openshot // to be reevaluated, editor broke
+ - Add progress for clipping
  - Make GUI
  - Fix bugs
 
