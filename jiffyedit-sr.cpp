@@ -3,8 +3,8 @@
 using namespace std;
 
 string bfflt, in, totlen, metaline3;
-float buffx2; // total length of the video in seconds
-bool fdur = false;
+float buffx2; // minimum silence time
+bool fdur = false, cb = false; // custom buffer
 long long int len;
 float buff = 0.3;
 float mclip = 0.5;
@@ -86,7 +86,7 @@ void reader() {
 	}
 	
 	secdur = stof(totlen);
-	
+
 	sorter();
 }
 
@@ -110,7 +110,17 @@ int main(int argc, char * arga[]) {
 				}
 			} else if (argv.at(i1).find("mt") == 0) {
 				i1++; mclip = stof(argv.at(i1));
+			} else if (argv.at(i1).find("smt") == 0) {
+			    i1++; buffx2 = stof(argv.at(i1));
+			    cb = true;
 			}
+		}
+		
+		if (cb) {
+		    if (buffx2 < buff * 2) {
+		        cout << "Fatal error: minimun silence time is less than silence buffer" << endl;
+		        exit(4);
+		    }
 		}
 	}
 	
@@ -126,9 +136,11 @@ void sorter() {
 		exit(3);
 	}
 	
-	i3 = 0;
-	buffx2 = buff * 2.0;
+	if (not cb) {
+    	buffx2 = buff * 2.0;
+	}
 	
+	i3 = 0;
 	for (i1 = 0; i1 < silarr.size(); i1 = i1 + 3) { // filter the silences by their duration
 		temp = i1 + 2; // temp is the duration of the silence
 		if (silarr.at(temp) > buffx2) { // if silence duration is enough, save it
@@ -136,6 +148,11 @@ void sorter() {
 			tempsil.push_back(silarr.at(i1)); i3++; // save the silence start to the list
 			tempsil.push_back(silarr.at(temp)); i3++; // save the silence end
 		}
+	}
+	
+	if (tempsil.size() <= 1) {
+	    cout << "Fatal error: no clips after filtering for silence duration." << endl;
+	    exit(4);
 	}
 	
 	i3 = 0;

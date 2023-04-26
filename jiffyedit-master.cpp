@@ -21,13 +21,13 @@ class plugin {
 };
 
 vector <plugin> fltarr;
-vector <plugin> plugls;
+vector <plugin> plugls; // the clpint will be used to access the clipper listed somewhere in here
 string aggcll; // aggregate calls, used to detect conflicting calls.
 
 void shotcut();
 
 float tonrfram(float tofrmvar) { // to nearest valid frame. shotcut needs timestamps to be frames but in a decimal format. weird
-	f2 = 0.0;
+	f2 = 0.0; // apparently this is one frame off. don't need to correct since onefrm is available, but be aware
 	for (f1 = 2.0; f2 < tofrmvar; f1 = f1 + 1.0) {
 		f2 = onefrm * f1;
 	}
@@ -46,6 +46,7 @@ string toanatim(float totimvar, int precision) { // to analogue time
 	float secs = 0.0;
 	float timecount = 0.0;
 	float postdot = totimvar;
+	
 	while (postdot >= 1.0) { // find the stuff after the .
 		postdot = postdot - 1.0;
 	}
@@ -70,10 +71,9 @@ string toanatim(float totimvar, int precision) { // to analogue time
 		}
 	}
 	totimvar = totimvar - 60.0 * timecount; // subtract the minutes, if any
+	secs = totimvar + postdot; // add the decimal points back in
 
-	secs = totimvar + postdot;
-
-	if (hrs < 10) {result = "0";}
+	if (hrs < 10) {result = "0";} // setting the first character to a 0 will make it so that timestamps appear as ##:##:#* rather than #:#:#* when the number of units of time is less than 10
 	stringstream wrttim; // write time
 	wrttim << result << hrs << ":";
 	if (mins < 10) {wrttim << "0";}
@@ -109,6 +109,7 @@ void openshot() {
 	int clpnum = 0;
 	for (i1 = 0; i1 < clparr.size(); i1 = i1 + 2) {
 		out.push_back("  {\n   \"alpha\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": 1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"anchor\": 0,\n   \"channel_filter\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"channel_mapping\": {\n    \"Points\": [\n     {\n      \"co\": {\n       \"X\": 1.0,\n       \"Y\": -1.0\n      },\n      \"handle_left\": {\n       \"X\": 0.5,\n       \"Y\": 1.0\n      },\n      \"handle_right\": {\n       \"X\": 0.5,\n       \"Y\": 0.0\n      },\n      \"handle_type\": 0,\n      \"interpolation\": 0\n     }\n    ]\n   },\n   \"display\": 0,");
+		
 		stringstream wrtdur;
 		wrtdur << fixed << setprecision(14) << secdur;
 		getline(wrtdur, s1);
@@ -562,7 +563,6 @@ void pitivi() {
 		bool vidfltb;
 		string audflt; // audio and video filters for the special ones that need it
 		string vidflt;
-
 		for (i2 = 0; i2 < fltarr.size(); i2++) {
 			string fltcmd = "\""; 
 			fltcmd.append(fltarr.at(i2).exe);
@@ -578,17 +578,11 @@ void pitivi() {
 			fltcmd.append(to_string(clparr.size() - 1));
 			fltcmd.append(" ");
 			fltcmd.append(fltarr.at(i2).args);
-
-			const char * realfltcmd = fltcmd.c_str();
-
 			FILE * inflts = NULL;
 			char buf[1025];
-			
 			audfltb = false;
 			vidfltb = false;
-
-			if ((inflts = popen(realfltcmd, "r")) != NULL) {
-
+			if ((inflts = popen(fltcmd.c_str(), "r")) != NULL) {
 				while (fgets(buf, 1024, inflts) != NULL) {
 					s1 = buf;
 					if (s1.find("-volume-control: ") == 0) {
@@ -612,7 +606,6 @@ void pitivi() {
 						out.push_back(s1);
 					}
 				}
-				
 				pclose(inflts);
 				inflts = NULL;
 			}
@@ -670,28 +663,23 @@ void reader() {
 
 	/// inmeta is for getting info about the video
 	// pipes in c++ seem to be horribly documented, so i'll do my best to explain it here. if i say i think something, it means im not entirely sure what exactly it does, so this is just my best guess from what little legible code and documentation i have been able to find
-	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from fstream would probably work, but i'm following their advice, just to be safe.
-	char buf[1025]; // this is just a char array because its safer with C functions, i guess? strings would probably work, but again, better to be safe.
-
-	const char * realcmd = cmd.c_str();
+	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from other stuff won't work, unless you write a custom one
+	char buf[1025]; // this is needed for use with C functions
 	cout << "Gathering metadata..." << endl;
-	inmeta = popen(realcmd, "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
-	if (inmeta != NULL) {
+	inmeta = popen(cmd.c_str(), "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
+	if (inmeta != NULL) { // putting this here in an if statement or the popen() function itself (seen below) makes the program wait until execution of the child process is finished
 		while (fgets(buf, 1024, inmeta) != NULL) { // this loop sets buf = the current line of the datastream. fgets is for plaintext data only. the 1024 specifies to read a max of 1024 characters, so as not to overflow (at least i think so anyway). lastly, the datastream to read from is specified. the != null makes it so that when the datastream reaches its end, the loop ends, so as to prevent overflow
 			metaline = buf; /// so for some reason i cant seem to add lines piped in from this specific command to an array of strings, which was originally how i was planning on doing it, so if you see any references to a string raw[], now you know why
-			
 			if (metaline.find("Stream") >= 0) {
 				for (i2 = 0; i2 < metaline.size(); i2++) { /// find resolution by scanning for three numbers in a row, then an 'x', then another three numbers. needs to stay because ffprobe is being weird
 					if (hasres) {break;}
 					if (isnum(metaline.at(i2)) and isnum(metaline.at(i2 + 1)) and isnum(metaline.at(i2 + 2)) and metaline.at(i2 + 3) == 'x' and isnum(metaline.at(i2 + 4)) and isnum(metaline.at(i2 + 5)) and isnum(metaline.at(i2 + 6))) {
-
 						hasres = true; /// resolution found
 						i3 = i2 + 4; /// should be the first number of the height
 						while (isnum(metaline.at(i3)) and i3 < metaline.size() and fheight == false) { // save every number after the 'x' until it finds a character that is not a number (should be ' ')
 							height.push_back(metaline.at(i3)); i3++;
 						}
 						fheight = true;
-
 						i3 = i2 + 2; /// should be the last number of width
 						while (isnum(metaline.at(i3)) and i3 > 0 and fwidth == false) { /// save everything before after the 'x' until it finds a character that is not a number (should be ' ')
 							width.push_back(metaline.at(i3)); i3--;
@@ -705,7 +693,6 @@ void reader() {
 				if (metaline.find("709") >= 0 and fclsp == false) {clspc = "709"; fclsp = true;}
 				if (metaline.find("601") >= 0 and fclsp == false) {clspc = "601"; fclsp = true;}
 			}
-
 			metaline2 = buf;
 			if (not isnum(metaline2.at(metaline2.size() - 1))) {
 				metaline2.erase(metaline2.size() - 1, metaline2.size()); /// erase newline character at the end of the string, if there is one
@@ -713,35 +700,25 @@ void reader() {
 			if (fheight and fwidth and fclsp) {break;}
 		}
 	}
-
 	pclose(inmeta); // closes the pipe after the end of the datastream
 	inmeta = NULL; // clears the datastream from memory (i think)
 
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 	cmd2 = replace(cmd2, "PATH", path);
-
-	const char * realcmd2 = cmd2.c_str();
-
 	FILE * indur = NULL;
-
-	if ((indur = popen(realcmd2, "r")) != NULL) { // this one here fetches one line
+	if ((indur = popen(cmd2.c_str(), "r")) != NULL) { // this one here fetches one line
 		while (fgets(buf, 1024, indur) != NULL) {
 			totlen = buf;
 		}
 		pclose(indur);
 		indur = NULL;
 	}
-
 	secdur = stof(totlen);
 	
 	string cmd3 = "ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"PATH\""; // fetch fps
 	cmd3 = replace(cmd3, "PATH", path);
-
-	const char * realcmd3 = cmd3.c_str();
-
-	FILE * infps = NULL;
-
-	if ((infps = popen(realcmd3, "r")) != NULL) {
+	FILE * infps;
+	if ((infps = popen(cmd3.c_str(), "r")) != NULL) {
 		while (fgets(buf, 1024, infps) != NULL) {
 			s1 = buf;
 		}
@@ -760,14 +737,10 @@ void reader() {
 	cmd4 = replace(cmd4, "PATH", path);
 	cmd4.append(" ");
 	cmd4.append(plugls.at(clpint).args);
-
-	const char * realcmd4 = cmd4.c_str();
-
-	FILE * inclps = NULL;
-	
+	FILE * inclps;
 	b1 = false; // b1 here is used to store whether the last timestamp was a clipstart or clipend. true = clipstart, false = clipend
 	cout << "Clipping..." << endl;
-	if ((inclps = popen(realcmd4, "r")) != NULL) {
+	if ((inclps = popen(cmd4.c_str(), "r")) != NULL) {
 		while (fgets(buf, 1024, inclps) != NULL) {
 			s1 = buf;
 			if (s1.find("clipstart: ") == 0) { 
@@ -776,9 +749,7 @@ void reader() {
 					exit(6);
 				}
 				s1.erase(0, 10);
-				
 				f2 = stof(s1);
-				
 				clparr.push_back(f2);
 				b1 = true;
 			} else if (s1.find("clipend: ") == 0) {
@@ -787,9 +758,7 @@ void reader() {
 					exit(6);
 				}
 				s1.erase(0, 8);
-				
 				f2 = stof(s1);
-				
 				clparr.push_back(f2);
 				b1 = false;
 			} else if (s1.find("Fatal error: ") == 0) {
@@ -806,16 +775,13 @@ void reader() {
 		pclose(inclps);
 		inclps = NULL;
 	}
-
 	if (clparr.size() == 0) {
 		cout << "Fatal error: No clips from clipper: " << plugls.at(clpint).name << " with call: " << plugls.at(clpint).call << endl;
 		exit(6);
 	}
 	
 	FILE * inchan;
-	
-	string cmd5 = replace("ffprobe -v error -show_entries stream=channel_layout -of csv=p=0 PATH", "PATH", path);
-	
+	string cmd5 = replace("ffprobe -v error -show_entries stream=channel_layout -of csv=p=0 \'PATH\'", "PATH", path);
 	s1 = "";
 	if ((inchan = popen(cmd5.c_str(), "r"))) {
 		while (fgets(buf, 1024, inchan)) {
@@ -830,56 +796,50 @@ void reader() {
 	else {chanls = 6;}
 	
 	FILE * invbse; // get video timebase
-	
-	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams v:0 PATH", "PATH", path);
-	
+	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams v:0 \"PATH\"", "PATH", path);
 	if ((invbse = popen(s1.c_str(), "r"))) {
 		while (fgets(buf, 1024, invbse)) {
 			s1 = buf;
 		}
 	}
 	pclose(invbse);
-	
 	stringstream getvbs;
 	getvbs << replace(s1, "/", " ");
 	getvbs >> vbsnum >> vbsden;
 	
 	FILE * inabse; // get audio timebase
-	
-	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams a:0 PATH", "PATH", path);
-	
+	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams a:0 \"PATH\"", "PATH", path);
 	if ((inabse = popen(s1.c_str(), "r"))) {
 		while (fgets(buf, 1024, inabse)) {
 			s1 = buf;
 		}
 	}
 	pclose(inabse);
+	stringstream getabs;
+	getabs << replace(s1, "/", " ");
+	getabs >> absnum >> absden;
 	
 	FILE * invbr; // get video bitrate
-	
-	s1 = replace("ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 PATH", "PATH", path);
-	
+	s1 = replace("ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 \"PATH\"", "PATH", path);
 	if ((invbr = popen(s1.c_str(), "r"))) {
 		while (fgets(buf, 1024, invbr)) {
-			vbr = stoi(buf);
+			stringstream getvbr; // switching to using stringstream for the stuff maybe required for openshot because ffmpeg keeps throwing inconsistent values at this crap
+			getvbr << buf;
+			getvbr >> vbr;
 		}
 	}
 	pclose(invbr);
 	
 	FILE * inabr; // get audio bitrate
-	
-	s1 = replace("ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 PATH", "PATH", path);
-	
+	s1 = replace("ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 \"PATH\"", "PATH", path);
 	if ((inabr = popen(s1.c_str(), "r"))) {
 		while (fgets(buf, 1024, inabr)) {
-			abr = stoi(buf);
+			stringstream getabr;
+			getabr << buf;
+			getabr >> abr;
 		}
 	}
 	pclose(inabr);
-
-	stringstream getabs;
-	getabs << replace(s1, "/", " ");
-	getabs >> absnum >> absden;
 	
 	int wid = stoi(width);
 	int hei = stoi(height);
@@ -890,7 +850,6 @@ void reader() {
 	stringstream getwid;
 	getwid << aspwidi;
 	getline(getwid, aspwid);
-
 	stringstream gethei;
 	gethei << aspheii;
 	getline(gethei, asphei);

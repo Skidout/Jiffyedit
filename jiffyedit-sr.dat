@@ -5,4 +5,5 @@ jiffyedit-sr
 bf # - Set buffer. A buffer at the beginning and end of each clip. Helps avoid jarring audio clipping. Default 0.3s.
 mt # - Set minimum clip length. - Having a minimum clip length helps avoid having many tiny clips. Default 0.5s.
 db # - Audio level for when silence ends and clips begin. Default -20dB.
+smt # - Set minimum silence time. Helps to avoid having clips that are very close to each other, making them one clip instead. Cannot be less than two times buffer. Default two times buffer.
 [sr], [sr bf 0.5 mt 1.0 db 25 ]
