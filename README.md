@@ -14,7 +14,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
    
   Where (path of file) is the path of the video file you want to remove silence from.
   In the square brackets is the call for the plugin you wish to use. This may not match the name of the plugin. Only one clipper may be used at a time.
-  Remember to put -i before the file. The shell script used to call the actual executable will make sure the file path is properly passed.
+  Remember to put -i before the file.
   
   [sr] Silence Remove - cut video to only the parts where the audio is as loud as specified.
   
@@ -56,8 +56,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     
     alias jiffyedit='/home/user/programs/jiffyedit'
       
-  And then change the path of the executable in the shell script to reflect the actual path of jiffyedit-master
-  Or you can simply navigate directly to the executable when you want to use it.
+  And change the path of the plugins in jiffyedit-master.cpp to reflect the actual path of the plugins. (See the #ifdef.)
     
   If want to use git clone and then enter the cloned folder on your PC, you can compile using the same commands, then add it just like it says above.
   
