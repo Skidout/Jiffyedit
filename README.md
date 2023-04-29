@@ -56,7 +56,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
     
     alias jiffyedit='/home/user/programs/jiffyedit'
       
-  And change the path of the plugins in jiffyedit-master.cpp to reflect the actual path of the plugins. (See the #ifdef.)
+  And change the path of the plugins in jiffyedit-master.cpp to reflect the actual path of the plugins (before compiling). (See the #ifdef.)
     
   If want to use git clone and then enter the cloned folder on your PC, you can compile using the same commands, then add it just like it says above.
   
@@ -77,6 +77,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
 ### Roadmap:
 // - Add support for Openshot // to be reevaluated, editor broke
  - Add progress for clipping
+ - Make a second repository gor other official plugins
  - Make GUI
  - Fix bugs
 
@@ -138,5 +139,16 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   LosslessCut does not support filters.
   Vidcutter also does not support filters.
 
+  Output from filterers is not read live.
+
   For both types of plugins, you can put "Fatal error: " at the beginning of any line, followed by an error message, to end the execution of the master program, should you encounter an error which cannot be fixed during execution. This line will be passed to the user.
   Any lines that a clipper outputs that do not use the format should be passed to the user.
+  
+  Filterers can put "message: " at the beginning of any line to have it passed to the user.
+  
+  When making a filterer for Shotcut, there is one thing to know: 
+  The first line of output needs to be the amount of filters that your filterer will add to the file. It can be 0 or no output if your filterer will not add any filters that time. This is necessary to keep a count of how many filters there are. The rest of the output will added directly to where filters would normally go in the file.
+
+  When making a filterer for Pitivi, there are a couple things to know: 
+  Normal output will be added directly to where filters would normally go. Some filters, however, may require that certain values that are usually handled by jiffyedit-master to be controlled by the filterer because Pitivi does not have a built-in way of having that filter. [st] is one such filter. 
+  With Pitivi/Gstreamer, you can control audio levels and audio level slopes with keyframes/timestamps. If your plugin needs control of that, you can put "-alpha-control: " at the beginning of a line for video, and "-volume-control: " for audio. The following text will be placed inside where that would normally go. You have control over everything after "source_type='interpolation'" until the "/>".
