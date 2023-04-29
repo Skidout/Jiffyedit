@@ -600,6 +600,9 @@ void pitivi() {
 					} else if (s1.find("Fatal error: ") == 0) {
 						cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
 						exit(6);
+					} else if (s1.find("message: ") == 0) {
+						s1.erase(0, 9);
+						cout << endl << s1 << endl;
 					} else {
 						c1 = s1.at(s1.size() - 1);
 						if (c1 == '\n') {s1.pop_back();} // remove newline if present
@@ -666,8 +669,10 @@ void reader() {
 	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from other stuff won't work, unless you write a custom one
 	char buf[1025]; // this is needed for use with C functions
 	cout << "Gathering metadata..." << endl;
-	inmeta = popen(cmd.c_str(), "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
-	if (inmeta != NULL) { // putting this here in an if statement or the popen() function itself (seen below) makes the program wait until execution of the child process is finished
+	b1 = false;
+	inmeta = popen(cmd.c_str(), "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line the second variable, "r", indicates that we want to read data from this datastream.
+	thread pctrl(pcheck, ref(inmeta), ref(b1));
+	while (not b1) { // putting this here in an if statement or the popen() function itself (seen below) makes the program wait until execution of the child process is finished
 		while (fgets(buf, 1024, inmeta) != NULL) { // this loop sets buf = the current line of the datastream. fgets is for plaintext data only. the 1024 specifies to read a max of 1024 characters, so as not to overflow (at least i think so anyway). lastly, the datastream to read from is specified. the != null makes it so that when the datastream reaches its end, the loop ends, so as to prevent overflow
 			metaline = buf; /// so for some reason i cant seem to add lines piped in from this specific command to an array of strings, which was originally how i was planning on doing it, so if you see any references to a string raw[], now you know why
 			if (metaline.find("Stream") >= 0) {
@@ -706,7 +711,10 @@ void reader() {
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 	cmd2 = replace(cmd2, "PATH", path);
 	FILE * indur = NULL;
-	if ((indur = popen(cmd2.c_str(), "r")) != NULL) { // this one here fetches one line
+	b1 = false;
+	indur = popen(cmd2.c_str(), "r");
+	thread pctrl2(pcheck, ref(indur), ref(b1));
+	while (not b1) { // this one here fetches one line
 		while (fgets(buf, 1024, indur) != NULL) {
 			totlen = buf;
 		}
@@ -718,7 +726,10 @@ void reader() {
 	string cmd3 = "ffprobe -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"PATH\""; // fetch fps
 	cmd3 = replace(cmd3, "PATH", path);
 	FILE * infps;
-	if ((infps = popen(cmd3.c_str(), "r")) != NULL) {
+	b1 = false;
+	infps = popen(cmd3.c_str(), "r");
+	thread pctrl3(pcheck, ref(infps), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, infps) != NULL) {
 			s1 = buf;
 		}
@@ -738,37 +749,40 @@ void reader() {
 	cmd4.append(" ");
 	cmd4.append(plugls.at(clpint).args);
 	FILE * inclps;
-	b1 = false; // b1 here is used to store whether the last timestamp was a clipstart or clipend. true = clipstart, false = clipend
+	bool b2 = false; // b1 here is used to store whether the last timestamp was a clipstart or clipend. true = clipstart, false = clipend
 	cout << "Clipping..." << endl;
-	if ((inclps = popen(cmd4.c_str(), "r")) != NULL) {
+	b1 = false;
+	inclps = popen(cmd4.c_str(), "r");
+	thread pctrl4(pcheck, ref(inclps), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, inclps) != NULL) {
 			s1 = buf;
 			if (s1.find("clipstart: ") == 0) { 
-				if (b1 == true) {
+				if (b2 == true) {
 					cout << endl << "Fatal error: Two clipstarts before clipend from clipper: " << plugls.at(clpint).name << endl;
 					exit(6);
 				}
 				s1.erase(0, 10);
 				f2 = stof(s1);
 				clparr.push_back(f2);
-				b1 = true;
+				b2 = true;
 			} else if (s1.find("clipend: ") == 0) {
-				if (b1 == false) {
+				if (b2 == false) {
 					cout << endl << "Fatal error: Two clipends before clipstart from clipper: " << plugls.at(clpint).name << endl;
 					exit(6);
 				}
 				s1.erase(0, 8);
 				f2 = stof(s1);
 				clparr.push_back(f2);
-				b1 = false;
+				b2 = false;
 			} else if (s1.find("Fatal error: ") == 0) {
 				cout << endl << s1 << " (from clipper: " << plugls.at(clpint).name << " with call: " << plugls.at(clpint).call << ")" << endl;
 				exit(6);
 			} else {
-				cout << s1 << endl;
+				cout << endl << s1 << endl;
 			}
 		}
-		if (b1) {
+		if (b2) {
 			cout << endl << "Fatal error: Final clipstart with no matching clipend from clipper: " << plugls.at(clpint).name << endl;
 			exit(6);
 		}
@@ -783,7 +797,10 @@ void reader() {
 	FILE * inchan;
 	string cmd5 = replace("ffprobe -v error -show_entries stream=channel_layout -of csv=p=0 \'PATH\'", "PATH", path);
 	s1 = "";
-	if ((inchan = popen(cmd5.c_str(), "r"))) {
+	b1 = false;
+	inchan = popen(cmd5.c_str(), "r");
+	thread pctrl5(pcheck, ref(inchan), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, inchan)) {
 			s1.append(buf);
 			s1.pop_back();
@@ -797,7 +814,10 @@ void reader() {
 	
 	FILE * invbse; // get video timebase
 	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams v:0 \"PATH\"", "PATH", path);
-	if ((invbse = popen(s1.c_str(), "r"))) {
+	b1 = false;
+	invbse = popen(s1.c_str(), "r");
+	thread pctrl6(pcheck, ref(invbse), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, invbse)) {
 			s1 = buf;
 		}
@@ -809,7 +829,10 @@ void reader() {
 	
 	FILE * inabse; // get audio timebase
 	s1 = replace("ffprobe -v 0 -of compact=p=0:nk=1 -show_entries stream=time_base -select_streams a:0 \"PATH\"", "PATH", path);
-	if ((inabse = popen(s1.c_str(), "r"))) {
+	b1 = false;
+	inabse = popen(s1.c_str(), "r");
+	thread pctrl7(pcheck, ref(inabse), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, inabse)) {
 			s1 = buf;
 		}
@@ -821,7 +844,10 @@ void reader() {
 	
 	FILE * invbr; // get video bitrate
 	s1 = replace("ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 \"PATH\"", "PATH", path);
-	if ((invbr = popen(s1.c_str(), "r"))) {
+	b1 = false;
+	invbr = popen(s1.c_str(), "r");
+	thread pctrl8(pcheck, ref(invbr), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, invbr)) {
 			stringstream getvbr; // switching to using stringstream for the stuff maybe required for openshot because ffmpeg keeps throwing inconsistent values at this crap
 			getvbr << buf;
@@ -832,7 +858,10 @@ void reader() {
 	
 	FILE * inabr; // get audio bitrate
 	s1 = replace("ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 \"PATH\"", "PATH", path);
-	if ((inabr = popen(s1.c_str(), "r"))) {
+	b1 = false;
+	inabr = popen(s1.c_str(), "r");
+	thread pctrl9(pcheck, ref(inabr), ref(b1));
+	while (not b1) {
 		while (fgets(buf, 1024, inabr)) {
 			stringstream getabr;
 			getabr << buf;
@@ -1349,6 +1378,9 @@ void shotcut() { // Shotcut/MLT XML format
 					if (s1.find("Fatal error: ") == 0) {
 						cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
 						exit(6);
+					} else if (s1.find("message: ") == 0) {
+						s1.erase(0, 9);
+						cout << endl << s1 << endl;
 					} else {
 						s1 = buf;
 						c1 = s1.at(s1.size() - 1);

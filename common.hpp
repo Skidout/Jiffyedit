@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream> 
 #include <iomanip>
+#include <thread>
 
 using namespace std;
 
@@ -15,6 +16,12 @@ long long int temp;
 float f2, f1, secdur /* total length of the video in seconds */;
 bool b1;
 unsigned long long int i1, i2, i3;
+
+void pcheck(FILE * &f, bool &pexit) { // check if child process exited
+	if (f != NULL) { // if (FILE * ) makes the thread wait for child process to finish
+		pexit = true; // pexit = true after child process has exited
+	}
+}
 
 string replace(string sprstr, string substr, string repstr) {
 	int pos = -1;
