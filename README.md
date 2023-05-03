@@ -143,6 +143,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
 
   For both types of plugins, you can put "Fatal error: " at the beginning of any line, followed by an error message, to end the execution of the master program, should you encounter an error which cannot be fixed during execution. This line will be passed to the user.
   Any lines that a clipper outputs that do not use the format should be passed to the user.
+  Clippers can put "reset: " at the beginning of any line and the master program will reset to the beginning of the line. Useful for progress.
   
   Filterers can put "message: " at the beginning of any line to have it passed to the user.
   
