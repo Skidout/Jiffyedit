@@ -11,8 +11,7 @@ using namespace std;
 
 string metaline, s1, s2, path, cmd, metaline2;
 char c1;
-long long int pos = -1;
-long long int temp;
+long long int pos = -1, temp;
 float f2, f1, secdur /* total length of the video in seconds */;
 bool b1;
 unsigned long long int i1, i2, i3;
@@ -27,10 +26,10 @@ string replace(string sprstr, string substr, string repstr) {
 	int pos = -1;
 	pos = sprstr.find(substr);
 	if (pos < 0) {
-		cout << "Fatal error: Substring to replace not found. Please report, send video and command if you can. (" << substr << ")"<< endl;
+		cout << "Fatal error: Substring to replace not found. Please report, send video and command if you can. (" << substr << ")" << endl;
 		exit(2);
 	}
-	sprstr.erase(pos, size(substr));
+	sprstr.erase(pos, substr.size());
 	sprstr.insert(pos, repstr);
 	return sprstr;
 }
@@ -51,9 +50,9 @@ bool isnum(char comp) {
 
 string ftog(float f) { // float to guint (or something)
 	string dotstr = ".", s; // pitivi wants these in some weird format. guint or something i think. this is the only way i can think of to convert
-	stringstream getsrt2;
-	getsrt2 << fixed << setprecision(9) << f;
-	getline(getsrt2, s);
+	stringstream getsrt;
+	getsrt << fixed << setprecision(9) << f;
+	getline(getsrt, s);
 	pos = s.find(dotstr);
 	s.erase(pos, dotstr.size());
 	return s;

@@ -602,7 +602,7 @@ void pitivi() {
 						exit(6);
 					} else if (s1.find("message: ") == 0) {
 						s1.erase(0, 9);
-						cout << endl << s1 << endl;
+						cout << s1;
 					} else {
 						c1 = s1.at(s1.size() - 1);
 						if (c1 == '\n') {s1.pop_back();} // remove newline if present
@@ -750,7 +750,7 @@ void reader() {
 	cmd4.append(plugls.at(clpint).args);
 	FILE * inclps;
 	bool b2 = false; // b1 here is used to store whether the last timestamp was a clipstart or clipend. true = clipstart, false = clipend
-	cout << "Clipping..." << endl;
+	cout << "Clipping...";
 	b1 = false;
 	inclps = popen(cmd4.c_str(), "r");
 	thread pctrl4(pcheck, ref(inclps), ref(b1));
@@ -778,8 +778,12 @@ void reader() {
 			} else if (s1.find("Fatal error: ") == 0) {
 				cout << endl << s1 << " (from clipper: " << plugls.at(clpint).name << " with call: " << plugls.at(clpint).call << ")" << endl;
 				exit(6);
+			} else if(s1.find("reset: ") == 0) {
+				s1.pop_back();
+				s1.erase(0, 7);
+				cout << "\r" << s1;
 			} else {
-				cout << endl << s1 << endl;
+				cout << s1;
 			}
 		}
 		if (b2) {
@@ -793,6 +797,7 @@ void reader() {
 		cout << "Fatal error: No clips from clipper: " << plugls.at(clpint).name << " with call: " << plugls.at(clpint).call << endl;
 		exit(6);
 	}
+	cout << endl;
 	
 	FILE * inchan;
 	string cmd5 = replace("ffprobe -v error -show_entries stream=channel_layout -of csv=p=0 \'PATH\'", "PATH", path);
@@ -1380,7 +1385,7 @@ void shotcut() { // Shotcut/MLT XML format
 						exit(6);
 					} else if (s1.find("message: ") == 0) {
 						s1.erase(0, 9);
-						cout << endl << s1 << endl;
+						cout << s1;
 					} else {
 						s1 = buf;
 						c1 = s1.at(s1.size() - 1);

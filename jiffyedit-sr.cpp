@@ -16,61 +16,9 @@ void primary();
 void sorter();
 
 void reader() {
-
-	/// inmeta is for getting the silences
-	// pipes in c++ seem to be horribly documented, so i'll do my best to explain it here. if i say i think something, it means im not entirely sure what exactly it does, so this is just my best guess from what little legible code and documentation i have been able to find
-	
-	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from fstream would probably work, but i'm following their advice, just to be safe.
-	
-	char buf[1025]; // this is just a char array because its safer with C functions, i guess? strings would probably work, but again, better to be safe.
-	const char * realcmd = cmd.c_str();
-	
-	inmeta = popen(realcmd, "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
-	
-	if (inmeta != NULL) {
-		while (fgets(buf, 1024, inmeta) != NULL) { // this loop sets buf = the current line of the datastream. fgets is for plaintext data only. the 1024 specifies to read a max of 1024 bytes, so as not to overflow (at least i think so anyway). lastly, the datastream to read from is specified. the != null makes it so that when the datastream reaches its end, the loop ends, so as to prevent overflow			
-			metaline2 = buf;
-			c1 = metaline2.at(metaline2.size() - 1);
-			if (not isnum(c1)) {
-				metaline2.erase(metaline2.size() - 1, metaline2.size()); /// erase newline character at the end of the string, if there is one
-			}
-			
-			pos = -1;
-			pos = metaline2.find("silence_start: "); /// finds the start of the silence
-			if (pos > 0) {
-				pos = pos + 15;
-				metaline2.erase(0, pos); // isolate the float value by erasing the rest of the string.
-				silarr.push_back(stof(metaline2));	
-			}
-			
-			pos = -1;
-			pos = metaline2.find("silence_end: "); // finds the ending float of the silence_detect
-			if (pos > 0) {
-				pos = pos + 13;
-				metaline2.erase(0, pos); 
-				pos = 0;
-				while (c1 != ' ' and pos < size(metaline2)) {
-					pos++;
-					c1 = metaline2.at(pos);
-				}
-				silarr.push_back(stof(metaline2));
-
-				metaline3 = metaline2;
-				pos = metaline3.find("silence_duration: ");
-				pos = pos + 18;
-				metaline3.erase(0, pos);
-				silarr.push_back(stof(metaline3));
-			}
-		}
-		pclose(inmeta); // closes the pipe after the end of the datastream
-		inmeta = NULL; // clears the datastream from memory (i think)
-	}
-	if (silarr.size() == 0) {
-		cout << "Fatal error: No clips found in video." << endl;
-		exit(4);
-	}
-	
-	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
+    char buf[1025];
+    
+    string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 	cmd2 = replace(cmd2, "PATH", path);
 	
 	const char * realcmd2 = cmd2.c_str();
@@ -87,13 +35,71 @@ void reader() {
 	
 	secdur = stof(totlen);
 
+	/// inmeta is for getting the silences
+	// pipes in c++ seem to be horribly documented, so i'll do my best to explain it here. if i say i think something, it means im not entirely sure what exactly it does, so this is just my best guess from what little legible code and documentation i have been able to find
+	
+	FILE * inmeta = NULL; // so this here is creating a file pointer which will later become a datastream. according to cppreference.com (or somewhere similar), this type of stream is not meant to be accessed by any functions outside of the <stdio.h> library. Using functions from fstream would probably work, but i'm following their advice, just to be safe.
+	
+	const char * realcmd = cmd.c_str();
+	
+	inmeta = popen(realcmd, "r"); // this tries to open a pipe (datastream) with ffmpeg for silencedetect. the first variable inside is literally a command, just like one you would run in a terminal or command line. the second variable, "r", indicates that we want to read data from this datastream.
+	b1 = false;
+	thread pctrl(pcheck, ref(inmeta), ref(b1));
+	while (not b1) {
+		while (fgets(buf, 1024, inmeta) != NULL) { // this loop sets buf = the current line of the datastream. fgets is for plaintext data only. the 1024 specifies to read a max of 1024 bytes, so as not to overflow (at least i think so anyway). lastly, the datastream to read from is specified. the != null makes it so that when the datastream reaches its end, the loop ends, so as to prevent overflow			
+			metaline2 = buf;
+			c1 = metaline2.at(metaline2.size() - 1);
+			if (not isnum(c1)) {
+				metaline2.erase(metaline2.size() - 1, metaline2.size()); /// erase newline character at the end of the string, if there is one
+			}
+			pos = -1;
+			pos = metaline2.find("silence_start: "); /// finds the start of the silence
+			if (pos > 0) {
+				pos = pos + 15;
+				metaline2.erase(0, pos); // isolate the float value by erasing the rest of the string.
+				silarr.push_back(stof(metaline2));
+			}
+			
+			pos = -1;
+			pos = metaline2.find("silence_end: "); // finds the ending float of the silence_detect
+			if (pos > 0) {
+				pos = pos + 13;
+				metaline2.erase(0, pos); 
+				pos = 0;
+				while (c1 != ' ' and pos < size(metaline2)) {
+					pos++;
+					c1 = metaline2.at(pos);
+				}
+				silarr.push_back(stof(metaline2));
+				
+				stringstream getper; /// get percentage
+				getper << fixed << setprecision(0) << stof(metaline2) / secdur * 100;
+				getline(getper, s1);
+				s1.append("%");
+				cout << fixed << setprecision(3) << "reset: clipping: " << stof(metaline2) << "/" << secdur << " " << s1 << endl; // progress
+				
+				metaline3 = metaline2;
+				pos = metaline3.find("silence_duration: ");
+				pos = pos + 18;
+				metaline3.erase(0, pos);
+				silarr.push_back(stof(metaline3));
+			}
+		}
+		pclose(inmeta); // closes the pipe after the end of the datastream
+		inmeta = NULL; // clears the datastream from memory (i think)
+	}
+	if (silarr.size() == 0) {
+		cout << "Fatal error: No clips found in video." << endl;
+		exit(4);
+	}
+
 	sorter();
 }
 
 void primary();
 
 int main(int argc, char * arga[]) {
-
+    cout << endl;
 	vector <string> argv;
 	path = arga[1]; 
 	if (argc > 2) {
