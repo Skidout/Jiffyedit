@@ -76,7 +76,6 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   
 ### Roadmap:
 // - Add support for Openshot // to be reevaluated, editor broke
- - Add progress for clipping
  - Make a second repository gor other official plugins
  - Make GUI
  - Fix bugs
