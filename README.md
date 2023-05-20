@@ -75,7 +75,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
-// - Add support for Openshot // to be reevaluated, editor broke
+ - Add support for Openshot 
  - Make a second repository gor other official plugins
  - Make GUI
  - Fix bugs
