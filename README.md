@@ -3,6 +3,10 @@
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
 
+## New extra plugins repository
+
+  I have created a new repo for extra plugins here: https://github.com/Skidout/jiffyedit-extra which contains a new plugin for clipping by voice activity. If you have some custom-made plugins you would like to contribute, you can do so here, as long as they are written in C++.
+
 ## Usage:
 
   Enter ?, -h, -help, or --help for help, if you need it.
@@ -75,8 +79,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
- - Add support for Openshot 
- - Make a second repository gor other official plugins
+ - Add support for Openshot
  - Make GUI
  - Fix bugs
 
