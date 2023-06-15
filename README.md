@@ -3,11 +3,6 @@
 Note: Jiffyedit is not meant to completely replace manual editing, only to enhance it.
 Also note: This is an early version. Expect a few bugs and for things to change.
 
-## New extra plugins repository
-
-  I have created a new repo for extra plugins here: https://github.com/Skidout/jiffyedit-extra which contains a new plugin for clipping by voice activity. If you have some custom-made plugins you would like to contribute, you can do so here, as long as they are written in C++.
-  ### Note: I will not be accepting contributions to the extra or main repo until I find a new license.
-
 ## Usage:
 
   Enter ?, -h, -help, or --help for help, if you need it.
@@ -80,14 +75,13 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   If a part of the video is cut out that you want to include, if using Shotcut or Pitivi, you can drag from the edges of the clip to recover more of the video to include.
   
 ### Roadmap:
- - Choose new license
  - Add support for Openshot
  - Make GUI
  - Fix bugs
 
 ### For potential contributors:
 
-  The best way you can contribute is to add support for the editor you use or to make your own plugins. I want to keep the number of plugins on this repo to the two that are here, but I have thought about making another repo that would contain clippers that have full support and are up to date but don't come packaged by default. This repo would probably still be restricted to C++. If you have your own plugin you want to contribute to this repo, if you are willing to license it under (to be determined), please get in touch with me via email at Skidout@proton.me.
+The best way you can contribute is to add support for the editor you use or to make your own plugins. I want to keep the number of plugins on this repo to the two that are here, but I have created a new repo for extra plugins here: https://github.com/Skidout/jiffyedit-extra which contains a new plugin for clipping by voice activity. If you have some custom-made plugins you would like to contribute, you can do so there, as long as they are written in C++. If you have your own plugin you want to contribute to this repo, and you are willing to license it under this projects license, please get in touch with me via email at Skidout@proton.me, or make a pull request on the extra repo.
  
 ### Developer Documentation:
   In order to make and use a plugin, it needs a few things.
