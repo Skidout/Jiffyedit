@@ -1,15 +1,14 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit
-pkgver=1.4.6.17
+pkgver=1.4.6.19
 pkgrel=1
 pkgdesc="Automate video editing tasks for Shotcut, Pitivi, Losslesscut, and Vidcutter."
 arch=(x86_64)
 url="https://github.com/Skidout/Jiffyedit"
-license=('GPL3')
+license=('custom')
 depends=(ffmpeg)
 makedepends=(gcc)
-provides=(jiffyedit)
 source=("$pkgname::git+$url")
 md5sums=('SKIP')
 
