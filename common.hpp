@@ -3,9 +3,12 @@
 #include <stdio.h>
 #include <cstring>
 #include <vector>
-#include <sstream> 
+#include <sstream>
 #include <iomanip>
 #include <thread>
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -22,7 +25,7 @@ void pcheck(FILE * &f, bool &pexit) { // check if child process exited
 	}
 }
 
-string replace(string sprstr, string substr, string repstr) {
+inline string replace(string sprstr, string substr, string repstr) {
 	int pos = -1;
 	pos = sprstr.find(substr);
 	if (pos < 0) {
@@ -34,7 +37,7 @@ string replace(string sprstr, string substr, string repstr) {
 	return sprstr;
 }
 
-bool isnum(char comp) {
+inline bool isnum(char comp) {
 	if (comp == '0') {return true;}
 	else if (comp == '1') {return true;}
 	else if (comp == '2') {return true;}
@@ -48,7 +51,7 @@ bool isnum(char comp) {
 	else {return false;}
 }
 
-string ftog(float f) { // float to guint (or something)
+inline string ftog(float f) { // float to guint (or something)
 	string dotstr = ".", s; // pitivi wants these in some weird format. guint or something i think. this is the only way i can think of to convert
 	stringstream getsrt;
 	getsrt << fixed << setprecision(9) << f;
@@ -56,4 +59,35 @@ string ftog(float f) { // float to guint (or something)
 	pos = s.find(dotstr);
 	s.erase(pos, dotstr.size());
 	return s;
+}
+
+inline string remquo(string s) {
+		if (s.at(0) == '\'') {s.erase(0, 1);} // remove quotation marks sorrounding string, if any
+		else if (s.at(0) == '\"') {s.erase(0, 1);}
+		if (s.at(s.size() - 1) == '\'') {s.erase(s.size() - 2, s.size() - 1);}
+		else if (s.at(s.size() - 1) == '\"') {s.erase(s.size() - 2, s.size() - 1);}
+		return s;
+}
+
+inline string chfsfx(string s, string newsfx) { // change file suffix
+	s = remquo(s);
+	reverse(s.begin(), s.end());
+	if (s.find(".") >= 0) {s.erase(0, s.find("."));} // if there is no suffix, append new suffix and . instead of replace suffix
+	else {s.append(".");}
+	reverse(s.begin(), s.end());
+	s.append(newsfx);
+	return s;
+}
+
+inline void log(string s) {
+	string lp = chfsfx(path, "log");
+	if (not (filesystem::exists(lp))) {
+	 ofstream wrtlog(lp);
+	 wrtlog << lp << endl;
+	 wrtlog.close();
+	} else {
+		ofstream wrtlog(lp, ofstream::app);
+		wrtlog << s << endl;
+		wrtlog.close();
+	}
 }
