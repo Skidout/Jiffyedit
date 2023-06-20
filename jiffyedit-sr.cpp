@@ -227,7 +227,7 @@ inline void sorter() {
 		if (isbegin) {
 			cout << "clipstart: ";
 			isbegin = false;
-			if (logging {log("clipstart: ");}
+			if (logging) {log("clipstart: ");}
 		} else {
 			cout << "clipend: ";
 			isbegin = true;
