@@ -1,7 +1,7 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit
-pkgver=1.4.7.21
+pkgver=1.4.7.22
 pkgrel=1
 pkgdesc="Automate video editing tasks for Shotcut, Pitivi, Losslesscut, and Vidcutter."
 arch=(x86_64)

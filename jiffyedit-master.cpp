@@ -517,7 +517,7 @@ inline void melt(vector <string> argv) {
 
 	fin.push_back(s1);
 
-	s1 = "  <consumer ab=\"384k\" acodec=\"flac\" ar=\"48000\" bf=\"8\" channels=\"2\" deinterlacer=\"bwdif\" f=\"mp4\" g=\"999\" mlt_service=\"avformat\" movflags=\"+faststart\" preset=\"slow\" real_time=\"-4\" rescale=\"hyper\" target=\"TARGET\" threads=\"THREADS\" top_field_first=\"2\" vb=\"VBR\" vbr=\"off\" vcodec=\"libx265\" x265-params=\"keyint=999:bframes=8:\"/>";
+	s1 = "  <consumer ab=\"384k\" acodec=\"flac\" ar=\"48000\" bf=\"8\" channels=\"2\" deinterlacer=\"bwdif\" f=\"mp4\" g=\"999\" mlt_service=\"avformat\" movflags=\"+faststart\" preset=\"slow\" real_time=\"-4\" rescale=\"hyper\" target=\"TARGET\" threads=\"THREADS\" top_field_first=\"2\" vb=\"VBRk\" vbr=\"off\" vcodec=\"libx265\" x265-params=\"keyint=999:bframes=8:\"/>";
 	i1 = thread::hardware_concurrency();
 	if (i1 > 12) {i1 = 12;}
 	s1 = replace(s1, "THREADS", to_string(i1));
