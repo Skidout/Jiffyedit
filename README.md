@@ -74,6 +74,7 @@ Also note: This is an early version. Expect a few bugs and for things to change.
   [sr] may be having issues, or maybe there is some new inconsistency with FFmpeg, possibly relating to the use of AV1 encoding. Don't ask me how that affects detecting silence in audio, but that's what it seems like.
 
 ### Roadmap:
+Jiffyedit has some minor technical debt which I want to be worked out before I continue development much further. I want to implement shared libraries as an option for plugins to speed things up and there is code that can be reused and general cleanup that should be done. As long as it doesn't take me too long to learn how to use shared libraries, it won't take long after I actually start for that to be finished, but I also have some other things going on right now. For now, Jiffyedit is still useable as it is, so there is no need to rush.
 
 - Add support for Openshot
 - Make GUI
