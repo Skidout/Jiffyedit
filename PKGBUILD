@@ -8,7 +8,7 @@ arch=(x86_64)
 url="https://github.com/Skidout/Jiffyedit"
 license=('custom')
 depends=(ffmpeg)
-makedepends=(clang, llvm, lld, libc++)
+makedepends=(clang llvm lld libc++)
 optdepends=(
 	'mlt: for direct export with mlt filters'
 )
