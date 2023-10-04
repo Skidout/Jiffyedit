@@ -1,6 +1,7 @@
 #include <fstream> // other includes inside common.hpp
 #include <algorithm>
 #include <filesystem>
+#include <numeric>
 
 #include "common.hpp"
 
@@ -94,7 +95,7 @@ inline void help(int code) {
 	for (i4 = 0; i4 < plugls.size(); i4++) {
 		cout << '	' << plugls.at(i4).name << ' ' << plugls.at(i4).call << endl;
 		for (i1 = 0; i1 < size(plugls.at(i4).help); i1++) {
-			cout << "		";
+			cout << "   ";
 			if (i1 == size(plugls.at(i4).help) - 1) {
 				cout << "Example command: ";
 			}
@@ -102,7 +103,9 @@ inline void help(int code) {
 		}
 	}
 	cout << "Currently the editors available are;" << endl;
-	cout << "	shotcut" << endl << "	pitivi" << endl << "	losslesscut" << endl << "	vidcutter" << endl <<  "	mlt" << endl;
+	cout << "   shotcut" << endl << "   pitivi" << endl << "   losslesscut" << endl << "   vidcutter" << endl <<  "   mlt (direct export)" << endl;
+	cout << "The options currently available for direct export are:" << endl;
+	cout << "   video-bitrate #" << endl << "   video-codec *" << endl << "   video-width #" << endl << "   video-height #" << endl << "   video-colorspace *" << endl << "   audio-bitrate #" << endl << "   audio-codec *" << "   audio-samplerate #" << "   audio-channels #" << endl;
 	exit(code);
 }
 
@@ -458,13 +461,70 @@ inline void melt(vector <string> argv) {
 	f2 = fpsnum / fpsden; // find how often a new frame occurs. this more convoluted method is necessary for decimal framerates.
 	onefrm = 1.0 / f2;
 
+	b1 = false;
+	vbr = stoi(width) * stoi(height) / 2000;
+	if (vbr < 1000) {vbr = 1000;}
+	abr = 384;
+	int audrate = 48000;
+	i4 = thread::hardware_concurrency();
+	string vcodec = "libx265";
+	string acodec = "libopus";
 	string vidout = chfsfx(path, "jiffyedited.mp4");
+	string deinterlacer = "bwdif";
+	string format = "mp4";
 	for (i1 = 0; i1 < argv.size(); i1++) {
 		if (argv.at(i1).find("-o") == 0 and argv.at(i1).size() == 2) {
+			i1++;
 			vidout = argv.at(i1);
-			break;
+		} else if (argv.at(i1).find("video-codec") == 0) {
+			i1++;
+			vcodec = argv.at(i1);
+		} else if (argv.at(i1).find("video-width") == 0) {
+			i1++;
+			width = argv.at(i1);
+			if (not b1) {
+				vbr = stoi(width) * stoi(height) / 2000;
+			}
+		} else if (argv.at(i1).find("video-height") == 0) {
+			i1++;
+			height = argv.at(i1);
+			if (not b1) {
+				vbr = stoi(width) * stoi(height) / 2000;
+			}
+		} else if (argv.at(i1).find("video-bitrate") == 0) {
+			i1++;
+			vbr = stoi(argv.at(i1));
+			b1 = true;
+		} else if (argv.at(i1).find("video-colorspace") == 0) {
+			i1++;
+			clspc = argv.at(i1);
+		} else if (argv.at(i1).find("video-deinterlacer") == 0) {
+			i1++;
+			deinterlacer = argv.at(i1);
+		} else if (argv.at(i1).find("video-format") == 0) {
+			i1++;
+			format = argv.at(i1);
+		} else if (argv.at(i1).find("audio-bitrate") == 0) {
+			i1++;
+			abr = stoi(argv.at(i1));
+		} else if (argv.at(i1).find("audio-samplerate") == 0) {
+			i1++;
+			audrate = stoi(argv.at(i1));
+		} else if (argv.at(i1).find("audio-codec") == 0) {
+			i1++;
+			acodec = argv.at(i1);
+		} else if (argv.at(i1).find("audio-channels") == 0) {
+			i1++;
+			chanls = stoi(argv.at(i1));
 		}
 	}
+	if (i4 > 16) {i4 = 16;}
+
+	unsigned int wid = stoi(width);
+	unsigned int hei = stoi(height);
+	temp = gcd(wid, hei);
+	aspwidi = wid / temp;
+	aspheii = hei / temp;
 
 	if (fs::exists(vidout) and not overwrite) {
 		cout << vidout << " already exists. Continuing will overwrite it. Continue?" << endl;
@@ -509,20 +569,25 @@ inline void melt(vector <string> argv) {
 
 	s1 = replace(s1, "WIDTH", width);
 	s1 = replace(s1, "HEIGHT", height);
-	s1 = replace(s1, "ASPWID", aspwid);
-	s1 = replace(s1, "ASPHEI", asphei);
+	s1 = replace(s1, "ASPWID", to_string(aspwidi));
+	s1 = replace(s1, "ASPHEI", to_string(aspheii));
 	s1 = replace(s1, "FPSNUM", to_string(fpsnum));
 	s1 = replace(s1, "FPSDEN", to_string(fpsden));
 	s1 = replace(s1, "CLSPC", clspc);
 
 	fin.push_back(s1);
 
-	s1 = "  <consumer ab=\"384k\" acodec=\"flac\" ar=\"48000\" bf=\"8\" channels=\"2\" deinterlacer=\"bwdif\" f=\"mp4\" g=\"999\" mlt_service=\"avformat\" movflags=\"+faststart\" preset=\"slow\" real_time=\"-4\" rescale=\"hyper\" target=\"TARGET\" threads=\"THREADS\" top_field_first=\"2\" vb=\"VBRk\" vbr=\"off\" vcodec=\"libx265\" x265-params=\"keyint=999:bframes=8:\"/>";
-	i1 = thread::hardware_concurrency();
-	if (i1 > 12) {i1 = 12;}
-	s1 = replace(s1, "THREADS", to_string(i1));
-	s1 = replace(s1, "VBR", to_string(stoi(width) * stoi(height) / 2000));
+	s1 = "  <consumer acodec=\"ACODEC\" ar=\"AUDRATE\" bf=\"8\" channels=\"CHANLS\" compression_level=\"10\" deinterlacer=\"DEINT\" f=\"FORMAT\" g=\"999\" mlt_service=\"avformat\" movflags=\"+faststart\" vtag=\"hvc1\" preset=\"slow\" real_time=\"-4\" rescale=\"hyper\" target=\"TARGET\" threads=\"THREADS\" top_field_first=\"2\" vb=\"VBRk\" vbr=\"on\" vcodec=\"VCODEC\"/>";
+
+	s1 = replace(s1, "AUDRATE", to_string(audrate));
+	s1 = replace(s1, "VCODEC", vcodec);
+	s1 = replace(s1, "ACODEC", acodec);
+	s1 = replace(s1, "CHANLS", to_string(chanls));
+	s1 = replace(s1, "THREADS", to_string(i4));
+	s1 = replace(s1, "VBR", to_string(vbr));
 	s1 = replace(s1, "TARGET", vidout);
+	s1 = replace(s1, "DEINT", deinterlacer);
+	s1 = replace(s1, "FORMAT", format);
 	fin.push_back(s1);
 
 	fin.push_back("  <playlist id=\"main_bin\">");
@@ -542,6 +607,7 @@ inline void melt(vector <string> argv) {
 	float prolen = 0.0; // total project length
 
 	cout << "Filtering: 0/" << clparr.size() / 2;
+	if (logging) {log("Filtering: 0");}
 	i1 = 0;
 	long long unsigned int fltnum = 0;
 	for (i4 = 0; i4 < clparr.size(); i4 = i4 + 2) {
@@ -584,50 +650,52 @@ inline void melt(vector <string> argv) {
 		out.push_back("    <property name=\"xml\">was here</property>");
 
 		for (i2 = 0; i2 < fltarr.size(); i2++) {
-			string fltcmd = "\"";
-			fltcmd.append(fltarr.at(i2).exe);
-			fltcmd.append("\" \"PATH\"");
-			fltcmd = replace(fltcmd, "PATH", path);
-			fltcmd.append(" ");
-			fltcmd.append("shotcut ");
-			fltcmd.append(to_string(clparr.at(i4) + onefrm));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(clparr.at(i4 + 1) + onefrm));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(i1));
-			fltcmd.append("/");
-			fltcmd.append(to_string(clparr.size() - 1));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(fltnum));
-			fltcmd.append(" ");
-			if (logging) {fltcmd.append("-log");}
-			fltcmd.append(" ");
-			fltcmd.append(fltarr.at(i2).args);
-			if (logging) {log("filter cmd for " + fltarr.at(i2).call + ": " + fltcmd);}
-			const char * realfltcmd = fltcmd.c_str();
-			FILE * inflts = NULL;
-			char buf[1025];
-			if ((inflts = popen(realfltcmd, "r")) != NULL) {
-				if (inflts) {
-					fgets(buf, 1024, inflts);
-					fltnum = fltnum + stoi(s1 = buf);
-				}
-				while (fgets(buf, 1024, inflts) != NULL) {
-					if (s1.find("Fatal error: ") == 0) {
-						cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
-						exit(6);
-					} else if (s1.find("message: ") == 0) {
-						s1.erase(0, 9);
-						cout << s1;
-					} else {
-						s1 = buf;
-						c1 = s1.at(s1.size() - 1);
-						if (c1 == '\n') {s1.pop_back();} // remove newline if present
-						out.push_back(s1);
+			if (fltarr.at(i2).filter and not fltarr.at(i2).plsflt) { // not sure how but it seems like some plugins are being called where they're not supposed to be so this is a solution
+				string fltcmd = "\"";
+				fltcmd.append(fltarr.at(i2).exe);
+				fltcmd.append("\" \"PATH\"");
+				fltcmd = replace(fltcmd, "PATH", path);
+				fltcmd.append(" ");
+				fltcmd.append("shotcut ");
+				fltcmd.append(to_string(clparr.at(i4) + onefrm));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(clparr.at(i4 + 1) + onefrm));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(i1));
+				fltcmd.append("/");
+				fltcmd.append(to_string(clparr.size() - 1));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(fltnum));
+				fltcmd.append(" ");
+				if (logging) {fltcmd.append("-log");}
+				fltcmd.append(" ");
+				fltcmd.append(fltarr.at(i2).args);
+				if (logging) {log("filter cmd for " + fltarr.at(i2).call + ": " + fltcmd);}
+				const char * realfltcmd = fltcmd.c_str();
+				FILE * inflts = NULL;
+				char buf[1025];
+				if ((inflts = popen(realfltcmd, "r")) != NULL) {
+					if (inflts) {
+						fgets(buf, 1024, inflts);
+						fltnum = fltnum + stoi(s1 = buf);
 					}
+					while (fgets(buf, 1024, inflts) != NULL) {
+						if (s1.find("Fatal error: ") == 0) {
+							cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
+							exit(6);
+						} else if (s1.find("message: ") == 0) {
+							s1.erase(0, 9);
+							cout << s1;
+						} else {
+							s1 = buf;
+							c1 = s1.at(s1.size() - 1);
+							if (c1 == '\n') {s1.pop_back();} // remove newline if present
+							out.push_back(s1);
+						}
+					}
+					pclose(inflts);
+					inflts = NULL;
 				}
-				pclose(inflts);
-				inflts = NULL;
 			}
 		}
 
@@ -635,6 +703,10 @@ inline void melt(vector <string> argv) {
 
 		i1++;
 		cout << progress << "Filtering: " << i1 << "/" << clparr.size() / 2;
+		if (logging) {
+			s1 = "Filtering: ";
+			log(s1 + to_string(i1) + "/" + to_string(clparr.size() / 2));
+		}
 	}
 	cout << endl;
 
@@ -645,44 +717,46 @@ inline void melt(vector <string> argv) {
 	prolenm1 = prolen - onefrm;
 
 	for (i1 = 0; i1 < plsfltarr.size(); i1++) {
-		string fltcmd = "\"";
-		fltcmd.append(remquo(fs::current_path().generic_string()) + "/");
-		fltcmd.append(plsfltarr.at(i2).exe);
-		fltcmd.append("\" \"PATH\" ");
-		fltcmd = replace(fltcmd, "PATH", path);
-		fltcmd.append("shotcut ");
-		fltcmd.append(to_string(fltnum));
-		fltcmd.append(" ");
-		fltcmd.append(to_string(prolen));
-		fltcmd.append(" ");
-		fltcmd.append(to_string(prolenm1));
-		if (logging) {fltcmd.append(" -log ");}
-		fltcmd.append(plsfltarr.at(i2).args);
-		if (logging) {log("filter cmd for " + plsfltarr.at(i2).call + ": " + fltcmd);}
-		const char * realfltcmd = fltcmd.c_str();
-		FILE * inflts = NULL;
-		char buf[1025];
-		if ((inflts = popen(realfltcmd, "r")) != NULL) {
-			if (inflts) {
-				fgets(buf, 1024, inflts);
-				fltnum = fltnum + stoi(s1 = buf);
-			}
-			while (fgets(buf, 1024, inflts) != NULL) {
-				if (s1.find("Fatal error: ") == 0) {
-					cout << endl << s1 << " (from filterer: " << plsfltarr.at(i2).name << " with call: " << plsfltarr.at(i2).call << ")" << endl;
-					exit(6);
-				} else if (s1.find("message: ") == 0) {
-					s1.erase(0, 9);
-					cout << s1;
-				} else {
-					s1 = buf;
-					c1 = s1.at(s1.size() - 1);
-					if (c1 == '\n') {s1.pop_back();} // remove newline if present
-					plsflt.push_back(s1);
+		if (plsfltarr.at(i1).filter and plsfltarr.at(i1).plsflt) { // not sure how but it seems like some plugins are being called where they're not supposed to be so this is a solution
+			string fltcmd = "\"";
+			fltcmd.append(remquo(fs::current_path().generic_string()) + "/");
+			fltcmd.append(plsfltarr.at(i1).exe);
+			fltcmd.append("\" \"PATH\" ");
+			fltcmd = replace(fltcmd, "PATH", path);
+			fltcmd.append("shotcut ");
+			fltcmd.append(to_string(fltnum));
+			fltcmd.append(" ");
+			fltcmd.append(to_string(prolen));
+			fltcmd.append(" ");
+			fltcmd.append(to_string(prolenm1));
+			if (logging) {fltcmd.append(" -log ");}
+			fltcmd.append(plsfltarr.at(i1).args);
+			if (logging) {log("filter cmd for " + plsfltarr.at(i1).call + ": " + fltcmd);}
+			const char * realfltcmd = fltcmd.c_str();
+			FILE * inflts = NULL;
+			char buf[1025];
+			if ((inflts = popen(realfltcmd, "r")) != NULL) {
+				if (inflts) {
+					fgets(buf, 1024, inflts);
+					fltnum = fltnum + stoi(s1 = buf);
 				}
+				while (fgets(buf, 1024, inflts) != NULL) {
+					if (s1.find("Fatal error: ") == 0) {
+						cout << endl << s1 << " (from filterer: " << plsfltarr.at(i2).name << " with call: " << plsfltarr.at(i2).call << ")" << endl;
+						exit(6);
+					} else if (s1.find("message: ") == 0) {
+						s1.erase(0, 9);
+						cout << s1;
+					} else {
+						s1 = buf;
+						c1 = s1.at(s1.size() - 1);
+						if (c1 == '\n') {s1.pop_back();} // remove newline if present
+						plsflt.push_back(s1);
+					}
+				}
+				pclose(inflts);
+				inflts = NULL;
 			}
-			pclose(inflts);
-			inflts = NULL;
 		}
 	}
 
@@ -750,6 +824,7 @@ inline void melt(vector <string> argv) {
 	ofstream wrtmlt(outpath);
 	for (i1 = 0; i1 < fin.size(); i1++) {
 		wrtmlt << fin.at(i1) << endl;
+		if (logging) {log(fin.at(i1));}
 	}
 	wrtmlt.close();
 
@@ -782,8 +857,10 @@ inline void vidcut() {
 		out.push_back(replace(s1, "END", to_string(clparr.at(i1 + 1))));
 	}
 
+	if (logging) {log("Start of MLT");}
 	ofstream wrtvcp(outpath);
 	for (i1 = 0; i1 < out.size(); i1++) {
+		if (logging) {log(out.at(i1));}
 		wrtvcp << out.at(i1) << endl;
 	}
 	wrtvcp.close();
@@ -1187,6 +1264,13 @@ int main(int argc, const char * arga[]) {
 		}
 	}
 
+	if (logging) {
+		log ("plugls: ");
+		for (i1 = 0; i1 < plugls.size(); i1++) {
+			log(plugls.at(i1).name);
+		}
+	}
+
 	if (argv.size() < 2) {
 		cout << "Fatal error: invalid input. Usage:" << endl;
 		help(4);
@@ -1240,7 +1324,7 @@ int main(int argc, const char * arga[]) {
 						}
 						clpint = i2;
 						fclipr = true;
-						for (i1 = i1 + 1; i1 < argv.size(); i1++) { // i1 has to be used again here to increment the arguments
+						for (i1 = i1 + 1; i1 < argv.size(); i1++) {
 							c1 = argv.at(i1).at(0);
 							if (not(c1 == ']')) {
 								plugls.at(clpint).args.append(argv.at(i1));
@@ -1249,7 +1333,7 @@ int main(int argc, const char * arga[]) {
 						}
 						break;
 					} else if (plugls.at(i2).call.find(s1) == 0 and plugls.at(i2).filter) {
-						for (i1 = i1 + 1; i1 < argv.size(); i1++) { // i1 has to be used again here to increment the arguments
+						for (i1 = i1 + 1; i1 < argv.size(); i1++) {
 							c1 = argv.at(i1).at(0);
 							if (not(c1 == ']')) {
 								plugls.at(i2).args.append(argv.at(i1));
@@ -1317,7 +1401,7 @@ int main(int argc, const char * arga[]) {
 
 	outpath = path; // get the path of the resulting file
 	if (shotcutb) {outpath = chfsfx(outpath, "mlt");}
-	else if (pitivib) {chfsfx(outpath = outpath, "segx");}
+	else if (pitivib) {chfsfx(outpath, "segx");}
 	else if (losslessb) {
 		outpath.pop_back();
 		outpath = chfsfx(outpath, "-proj.lcc");
@@ -1374,13 +1458,11 @@ int main(int argc, const char * arga[]) {
 						fwidth = true;
 						reverse(width.begin(), width.end());
 					}
-					if (logging) {log("width: " + width + " height: " + height);}
 				}
 			}
 			if (metaline.find("Stream") >= 0) {
 				if (metaline.find("709") >= 0 and fclsp == false) {clspc = "709"; fclsp = true;}
 				if (metaline.find("601") >= 0 and fclsp == false) {clspc = "601"; fclsp = true;}
-				if (logging) {log("clspc: " + clspc);}
 			}
 			metaline2 = buf;
 			if (not isnum(metaline2.at(metaline2.size() - 1))) {
@@ -1391,6 +1473,8 @@ int main(int argc, const char * arga[]) {
 	}
 	pclose(inmeta); // closes the pipe after the end of the datastream
 	inmeta = NULL; // clears the datastream from memory (i think)
+	if (logging) {log("width: " + width + " height: " + height);}
+	if (logging) {log("clspc: " + clspc);}
 
 	string cmd2 = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"PATH\"";
 	cmd2 = replace(cmd2, "PATH", path);
@@ -1471,7 +1555,7 @@ int main(int argc, const char * arga[]) {
 			} else if(s1.find("reset: ") == 0) {
 				s1.pop_back();
 				s1.erase(0, 7);
-				cout << "\r" << s1;
+				cout << progress << s1;
 			} else {
 				cout << s1;
 			}
@@ -1572,9 +1656,9 @@ int main(int argc, const char * arga[]) {
 	pclose(inabr);
 	if (logging) {log("aud bitrate: " + to_string(abr));}
 
-	int wid = stoi(width);
-	int hei = stoi(height);
-	temp = __gcd(wid, hei);
+	unsigned int wid = stoi(width);
+	unsigned int hei = stoi(height);
+	temp = gcd(wid, hei);
 	aspwidi = wid / temp;
 	aspheii = hei / temp;
 
@@ -1696,50 +1780,52 @@ inline void shotcut() { // Shotcut/MLT XML format
 		out.push_back("    <property name=\"xml\">was here</property>");
 
 		for (i2 = 0; i2 < fltarr.size(); i2++) {
-			string fltcmd = "\"";
-			fltcmd.append(fltarr.at(i2).exe);
-			fltcmd.append("\" \"PATH\"");
-			fltcmd = replace(fltcmd, "PATH", path);
-			fltcmd.append(" ");
-			fltcmd.append("shotcut ");
-			fltcmd.append(to_string(clparr.at(i4) + onefrm));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(clparr.at(i4 + 1) + onefrm));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(i1));
-			fltcmd.append("/");
-			fltcmd.append(to_string(clparr.size() - 1));
-			fltcmd.append(" ");
-			fltcmd.append(to_string(fltnum));
-			fltcmd.append(" ");
-			if (logging) {fltcmd.append("-log");}
-			fltcmd.append(" ");
-			fltcmd.append(fltarr.at(i2).args);
-			if (logging) {log("filter cmd for " + fltarr.at(i2).call + ": " + fltcmd);}
-			const char * realfltcmd = fltcmd.c_str();
-			FILE * inflts = NULL;
-			char buf[1025];
-			if ((inflts = popen(realfltcmd, "r")) != NULL) {
-				if (inflts) {
-					fgets(buf, 1024, inflts);
-					fltnum = fltnum + stoi(s1 = buf);
-				}
-				while (fgets(buf, 1024, inflts) != NULL) {
-					if (s1.find("Fatal error: ") == 0) {
-						cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
-						exit(6);
-					} else if (s1.find("message: ") == 0) {
-						s1.erase(0, 9);
-						cout << s1;
-					} else {
-						s1 = buf;
-						c1 = s1.at(s1.size() - 1);
-						if (c1 == '\n') {s1.pop_back();} // remove newline if present
-						out.push_back(s1);
+			if (fltarr.at(i1).filter and not fltarr.at(i1).plsflt) { // not sure how but it seems like some plugins are being called where they're not supposed to be so this is a solution
+				string fltcmd = "\"";
+				fltcmd.append(fltarr.at(i2).exe);
+				fltcmd.append("\" \"PATH\"");
+				fltcmd = replace(fltcmd, "PATH", path);
+				fltcmd.append(" ");
+				fltcmd.append("shotcut ");
+				fltcmd.append(to_string(clparr.at(i4) + onefrm));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(clparr.at(i4 + 1) + onefrm));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(i1));
+				fltcmd.append("/");
+				fltcmd.append(to_string(clparr.size() - 1));
+				fltcmd.append(" ");
+				fltcmd.append(to_string(fltnum));
+				fltcmd.append(" ");
+				if (logging) {fltcmd.append("-log");}
+				fltcmd.append(" ");
+				fltcmd.append(fltarr.at(i2).args);
+				if (logging) {log("filter cmd for " + fltarr.at(i2).call + ": " + fltcmd);}
+				const char * realfltcmd = fltcmd.c_str();
+				FILE * inflts = NULL;
+				char buf[1025];
+				if ((inflts = popen(realfltcmd, "r")) != NULL) {
+					if (inflts) {
+						fgets(buf, 1024, inflts);
+						fltnum = fltnum + stoi(s1 = buf);
 					}
+					while (fgets(buf, 1024, inflts) != NULL) {
+						if (s1.find("Fatal error: ") == 0) {
+							cout << endl << s1 << " (from filterer: " << fltarr.at(i2).name << " with call: " << fltarr.at(i2).call << ")" << endl;
+							exit(6);
+						} else if (s1.find("message: ") == 0) {
+							s1.erase(0, 9);
+							cout << s1;
+						} else {
+							s1 = buf;
+							c1 = s1.at(s1.size() - 1);
+							if (c1 == '\n') {s1.pop_back();} // remove newline if present
+							out.push_back(s1);
+						}
+					}
+					pclose(inflts);
+					inflts = NULL;
 				}
-				pclose(inflts);
-				inflts = NULL;
 			}
 		}
 
@@ -1756,44 +1842,46 @@ inline void shotcut() { // Shotcut/MLT XML format
 	prolenm1 = prolen - onefrm;
 
 	for (i1 = 0; i1 < plsfltarr.size(); i1++) {
-		string fltcmd = "\"";
-		fltcmd.append(remquo(fs::current_path().generic_string()) + "/");
-		fltcmd.append(plsfltarr.at(i2).exe);
-		fltcmd.append("\" \"PATH\" ");
-		fltcmd = replace(fltcmd, "PATH", path);
-		fltcmd.append("shotcut ");
-		fltcmd.append(to_string(fltnum));
-		fltcmd.append(" ");
-		fltcmd.append(to_string(prolen));
-		fltcmd.append(" ");
-		fltcmd.append(to_string(prolenm1));
-		if (logging) {fltcmd.append(" -log ");}
-		fltcmd.append(plsfltarr.at(i2).args);
-		if (logging) {log("filter cmd for " + plsfltarr.at(i2).call + ": " + fltcmd);}
-		const char * realfltcmd = fltcmd.c_str();
-		FILE * inflts = NULL;
-		char buf[1025];
-		if ((inflts = popen(realfltcmd, "r")) != NULL) {
-			if (inflts) {
-				fgets(buf, 1024, inflts);
-				fltnum = fltnum + stoi(s1 = buf);
-			}
-			while (fgets(buf, 1024, inflts) != NULL) {
-				if (s1.find("Fatal error: ") == 0) {
-					cout << endl << s1 << " (from filterer: " << plsfltarr.at(i2).name << " with call: " << plsfltarr.at(i2).call << ")" << endl;
-					exit(6);
-				} else if (s1.find("message: ") == 0) {
-					s1.erase(0, 9);
-					cout << s1;
-				} else {
-					s1 = buf;
-					c1 = s1.at(s1.size() - 1);
-					if (c1 == '\n') {s1.pop_back();} // remove newline if present
-					plsflt.push_back(s1);
+		if (plsfltarr.at(i1).filter and plsfltarr.at(i1).plsflt) { // not sure how but it seems like some plugins are being called where they're not supposed to be so this is a solution
+			string fltcmd = "\"";
+			fltcmd.append(remquo(fs::current_path().generic_string()) + "/");
+			fltcmd.append(plsfltarr.at(i1).exe);
+			fltcmd.append("\" \"PATH\" ");
+			fltcmd = replace(fltcmd, "PATH", path);
+			fltcmd.append("shotcut ");
+			fltcmd.append(to_string(fltnum));
+			fltcmd.append(" ");
+			fltcmd.append(to_string(prolen));
+			fltcmd.append(" ");
+			fltcmd.append(to_string(prolenm1));
+			if (logging) {fltcmd.append(" -log ");}
+			fltcmd.append(plsfltarr.at(i1).args);
+			if (logging) {log("filter cmd for " + plsfltarr.at(i1).call + ": " + fltcmd);}
+			const char * realfltcmd = fltcmd.c_str();
+			FILE * inflts = NULL;
+			char buf[1025];
+			if ((inflts = popen(realfltcmd, "r")) != NULL) {
+				if (inflts) {
+					fgets(buf, 1024, inflts);
+					fltnum = fltnum + stoi(s1 = buf);
 				}
+				while (fgets(buf, 1024, inflts) != NULL) {
+					if (s1.find("Fatal error: ") == 0) {
+						cout << endl << s1 << " (from filterer: " << plsfltarr.at(i2).name << " with call: " << plsfltarr.at(i2).call << ")" << endl;
+						exit(6);
+					} else if (s1.find("message: ") == 0) {
+						s1.erase(0, 9);
+						cout << s1;
+					} else {
+						s1 = buf;
+						c1 = s1.at(s1.size() - 1);
+						if (c1 == '\n') {s1.pop_back();} // remove newline if present
+						plsflt.push_back(s1);
+					}
+				}
+				pclose(inflts);
+				inflts = NULL;
 			}
-			pclose(inflts);
-			inflts = NULL;
 		}
 	}
 

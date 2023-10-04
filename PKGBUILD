@@ -1,14 +1,14 @@
 # Maintainer: Skidout <Skidout@proton.me>
 
 pkgname=jiffyedit
-pkgver=1.4.7.22
+pkgver=1.5.8.23
 pkgrel=1
 pkgdesc="Automate video editing tasks for Shotcut, Pitivi, Losslesscut, and Vidcutter."
 arch=(x86_64)
 url="https://github.com/Skidout/Jiffyedit"
 license=('custom')
 depends=(ffmpeg)
-makedepends=(gcc)
+makedepends=(clang, llvm, lld, libc++)
 optdepends=(
 	'mlt: for direct export with mlt filters'
 )
@@ -17,9 +17,9 @@ md5sums=('SKIP')
 
 build() {
 	cd "$pkgname"
-	g++ -Ofast jiffyedit-master.cpp -o jiffyedit
-	g++ -Ofast jiffyedit-sr.cpp -o jiffyedit-sr
-	g++ -Ofast jiffyedit-st.cpp -o jiffyedit-st
+	clang++ -Ofast -std=c++17 -stdlib=libc++ -fuse-ld=lld jiffyedit-master.cpp -o jiffyedit
+	clang++ -Ofast -std=c++17 -stdlib=libc++ -fuse-ld=lld jiffyedit-sr.cpp -o jiffyedit-sr
+	clang++ -Ofast -std=c++17 -stdlib=libc++ -fuse-ld=lld jiffyedit-st.cpp -o jiffyedit-st
 }
 
 package() {

@@ -1,15 +1,21 @@
 #include "common.hpp" // includes inside common.hpp
 
+/*
+this modification to [sr] was supposed to improve stability in unusual situations, aka one video that just wouldnt.
+however, this is not working. i have no clue why, my best guess is that its to do with my compiler or library implementation.
+itll be seen whether or not switching to a more stable distro will make a difference or not. also would like to try clang with
+a different library implementation.
+*/
+
 using namespace std;
 
 string bfflt, in, totlen, metaline3;
-float buffx2; // minimum silence time
+double buffx2; // minimum silence time
 bool fdur = false, logging = false, cb = false; // custom buffer
 long long int len;
-float buff = 0.3;
-float mclip = 0.5;
-vector <float> silarr;
-vector <float> tempsil;
+double buff = 0.3;
+double mclip = 0.5;
+vector <clip> clparr;
 int decbels = 20;
 
 void sorter();
@@ -31,9 +37,9 @@ inline void reader() {
 		fdur = true;
 	}
 
-	secdur = stof(totlen);
+	secdur = stod(totlen);
 
-	/// inmeta is for getting the silences
+	// inmeta is for getting the silences
 
 	FILE * inmeta = NULL;
 
@@ -45,6 +51,7 @@ inline void reader() {
 	while (not b1) {
 		while (fgets(buf, 1024, inmeta) != NULL) {
 			metaline2 = buf;
+			clip tmpclp;
 			c1 = metaline2.at(metaline2.size() - 1);
 			if (not isnum(c1)) {
 				metaline2.erase(metaline2.size() - 1, metaline2.size()); // erase newline character at the end of the string, if there is one
@@ -54,7 +61,7 @@ inline void reader() {
 			if (pos > 0) {
 				pos = pos + 15;
 				metaline2.erase(0, pos); // isolate the float value by erasing the rest of the string.
-				silarr.push_back(stof(metaline2));
+				tmpclp.start = stod(metaline2);
 			}
 
 			pos = -1;
@@ -67,25 +74,21 @@ inline void reader() {
 					pos++;
 					c1 = metaline2.at(pos);
 				}
-				silarr.push_back(stof(metaline2));
+				tmpclp.end = stod(metaline2);
+				tmpclp.sd();
+				clparr.push_back(tmpclp);
 
 				stringstream getper; // get percentage
-				getper << fixed << setprecision(0) << stof(metaline2) / secdur * 100;
+				getper << fixed << setprecision(0) << stod(metaline2) / secdur * 100;
 				getline(getper, s1);
 				s1.append("%");
-				cout << fixed << setprecision(3) << "reset: clipping: " << stof(metaline2) << "/" << secdur << " " << s1 << endl; // progress
-
-				metaline3 = metaline2;
-				pos = metaline3.find("silence_duration: ");
-				pos = pos + 18;
-				metaline3.erase(0, pos);
-				silarr.push_back(stof(metaline3));
+				cout << fixed << setprecision(3) << "reset: clipping: " << stod(metaline2) << "/" << secdur << " " << s1 << endl; // progress
 			}
 		}
 		pclose(inmeta);
 		inmeta = NULL;
 	}
-	if (silarr.size() == 0) {
+	if (clparr.size() == 0) {
 		cout << "Fatal error: No clips found in video." << endl;
 		if (logging) {log("Fatal error: No clips found in video.");}
 		exit(4);
@@ -103,13 +106,13 @@ int main(int argc, char * arga[]) {
 			argv.push_back(arga[i1]);
 		}
 		for (i1 = 0; i1 < argv.size(); i1++) {
-			if (argv.at(i1).find("bf") == 0) {i1++; buff = stof(argv.at(i1));}
+			if (argv.at(i1).find("bf") == 0) {i1++; buff = stod(argv.at(i1));}
 			else if (argv.at(i1).find("db") == 0) {
-				i1++; decbels = stof(argv.at(i1));
+				i1++; decbels = stod(argv.at(i1));
 				if (decbels < 0.0) {decbels = decbels * -1.0;}
-			} else if (argv.at(i1).find("mt") == 0) {i1++; mclip = stof(argv.at(i1));}
+			} else if (argv.at(i1).find("mt") == 0) {i1++; mclip = stod(argv.at(i1));}
 			else if (argv.at(i1).find("smt") == 0) {
-				i1++; buffx2 = stof(argv.at(i1));
+				i1++; buffx2 = stod(argv.at(i1));
 				cb = true;
 			} else if (argv.at(i1).find("-log") == 0) {logging = true;}
 		}
@@ -124,7 +127,7 @@ int main(int argc, char * arga[]) {
 
 	if (logging) {log("Start of [sr]");}
 
-	cmd = "ffmpeg -i \"PATH\" -hide_banner -af silencedetect=noise=-DECBELSdB:d=0.03 -f null - 2>&1";
+	cmd = "ffmpeg -i \"PATH\" -hide_banner -nostats -af silencedetect=noise=-DECBELSdB:d=0.03 -f null - 2>&1";
 	cmd = replace(cmd, "DECBELS", to_string(decbels));
 	cmd = replace(cmd, "PATH", path);
 	reader();
@@ -137,105 +140,128 @@ inline void sorter() {
 	}
 
 	if (not cb) {
-    	buffx2 = buff * 2.0;
+		buffx2 = buff * 2.0;
 	}
 
-	i3 = 0;
-	for (i1 = 0; i1 < silarr.size(); i1 = i1 + 3) { // filter the silences by their duration
-		temp = i1 + 2; // temp is the duration of the silence
-		if (silarr.at(temp) > buffx2) { // if silence duration is enough, save it
-			temp = i1 + 1; // temp is now the silence end
-			tempsil.push_back(silarr.at(i1)); i3++; // save the silence start to the list
-			tempsil.push_back(silarr.at(temp)); i3++; // save the silence end
+	if (logging) {
+		log("Silence array:");
+		for (i1 = 0; i1 < clparr.size(); i1++) {
+			log(to_string(clparr.at(i1).start) + " : " + to_string(clparr.at(i1).end));
 		}
 	}
 
-	if (tempsil.size() <= 1) {
-	    cout << "Fatal error: no clips after filtering for silence duration." << endl;
+	if (logging) {log("converting silences to clips");}
+	if (clparr.at(0).start != 0.0) { // if the start of the first silence is not 0, the start of the first chain must be 0
+		clip tmpclp;
+		tmpclp.start = 0.0;
+		tmpclp.end = clparr.at(0).start;
+		clparr.insert(clparr.begin(), tmpclp);
+		i1 = 1;
+	} else {
+		i1 = 0;
+	}
+	for (i1; i1 < clparr.size() - 2; i1++) {
+		clparr.at(i1).start = clparr.at(i1).end;
+		clparr.at(i1).end = clparr.at(i1 + 1).start;
+	}
+	if (clparr.at(++i1).end != secdur) { // if the end of the last silence is not the end of the video, the last chain must be the end of the video. if it is, it is discarded.
+		clparr.at(i1).start = clparr.at(i1).end;
+		clparr.at(i1).end = secdur;
+	} else {
+		clparr.pop_back();
+	}
+	if (clparr.size() <= 1) {
+	    cout << "Fatal error: no clips after filtering for chains." << endl;
+	    exit(4);
+	}
+	if (logging) {
+		log("Converted to clip array:");
+		for (i1 = 0; i1 < clparr.size(); i1++) {
+			log(to_string(clparr.at(i1).start) + " : " + to_string(clparr.at(i1).end));
+		}
+	}
+
+	if (logging) {
+		log ("Merging clips");
+		if (logging) {log(to_string(clparr.size()));}
+	}
+	for (i1 = 0; i1 < clparr.size() - 1; i1++) {
+		while (i1 < clparr.size() - 1 and clparr.at(i1).end + buff > clparr.at(i1 + 1).start - buff) {
+			clparr.at(i1 + 1).start = clparr.at(i1).start;
+			auto it1 = clparr.begin();
+			for (i3 = 0; i3 < i1; i3++) {it1++;}
+			clparr.erase(it1);
+		}
+	}
+	if (logging) {
+		log("Merged clips array:");
+		for (i1 = 0; i1 < clparr.size(); i1++) {
+			log(to_string(clparr.at(i1).start) + " : " + to_string(clparr.at(i1).end));
+		}
+	}
+
+	if (logging) {log("sorting clip durations");}
+	for (i1 = 0; i1 < clparr.size(); i1++) { // if chains are too short, remove them
+		clparr.at(i1).sd();
+		if (clparr.at(i1).end - clparr.at(i1).start < mclip) {
+			auto it1 = clparr.begin();
+			for (i3 = 0; i3 < i1; i3++) {it1++;}
+			clparr.erase(it1);
+		}
+	}
+	if (clparr.size() <= 1) {
+	    cout << "Fatal error: no clips after filtering for duration." << endl;
 	    exit(4);
 	}
 
-	i3 = 0;
-	i2 = 2;
-
-	if (tempsil.at(0) == 0.0) { // if the first item here is 0, then the next needs to be the start of the first chain because 0 cannot be the end of a chain
-		silarr.at(0) = tempsil.at(1);
-	}
-	else {
-		silarr.at(0) = 0.0; // if it isnt 0, the start of the first chain needs to be 0
-	}
-
-	for (i1 = 1; i2 < tempsil.size(); i1++) { // filter everything else
-		silarr.at(i1) = tempsil.at(i2); i3++;
-		i2++;
-	}
-
-	if (silarr.at(i3) != secdur) { // if the last silence end is less than the dur, make the dur the end of the final clip. if not, the silence end is junk and wont be used.
-		silarr.at(i1) = secdur; i3++; b1 = true;
-	}
-
-	for (i1 = silarr.size() + 1; i1 > i3 + 2; i1--) { // loop to remove excess data from silarr
-		silarr.pop_back();
-	}
-
-
-	i2 = 0;
-	if (not(b1)) {i2++; i2++;}
-	i3 = 0;
-
-	for (i1 = 0; i1 < silarr.size() - i2; i1 = i1 + 2) { // sort the clips by the their duration
-		temp = i1 + 1;
-
-		f1 = silarr.at(temp) - silarr.at(i1); // find the clip dur
-		if (f1 > mclip) {
-			tempsil.at(i3) = silarr.at(i1); i3++;
-			tempsil.at(i3) = silarr.at(temp); i3++;
-
+	if (logging) {
+		log("Sorted clip dur array:");
+		for (i1 = 0; i1 < clparr.size(); i1++) {
+			log(to_string(clparr.at(i1).start) + " : " + to_string(clparr.at(i1).end));
 		}
 	}
 
-	for (i1 = tempsil.size(); i1 > i3; i1--) { // loop to remove excess data from tempsil
-		tempsil.pop_back();
+	if (logging) {log("adding buffer to clips");}
+	if (clparr.at(0).start < buff) {
+		clparr.at(0).start = 0.0;
+		clparr.at(0).end += buff;
+	} else {
+		clparr.at(0).start -= buff;
+		clparr.at(0).end += buff;
+	}
+	for (i1 = 1; i1 < clparr.size() - 2; i1++) {
+		clparr.at(i1).start -= buff;
+		clparr.at(i1).end += buff;
+	}
+	if (clparr.at(i1).end > secdur - buff) {
+		clparr.at(i1).start -= buff;
+		clparr.at(i1).end = secdur;
+	} else {
+		clparr.at(i1).start -= buff;
+		clparr.at(i1).end += buff;
 	}
 
-	i3 = 0;
-
-	if (tempsil.at(0) < buff) { // beginning thing for adding the buffer
-		silarr.at(0) = 0.0; i3++;
-		silarr.at(1) = tempsil.at(1) + buff; i3++;
+	if (logging) {
+		log("Added buf array (final):");
 	}
 
-	for (i1 = i3; i1 < tempsil.size(); i1 = i1 + 2) { // add the buffer to all the rest
-		temp = i1 + 1;
-		silarr.at(i3) = tempsil.at(i1) - buff; i3++;
-		silarr.at(i3) = tempsil.at(temp) + buff; i3++;
-	}
-
-	temp = i3 - 1;
-
-	if (secdur - silarr.at(temp) < 0.0) {
-		silarr.at(temp) = secdur;
-	}
-
-	for (i1 = silarr.size(); i1 > i3; i1--) {
-		silarr.pop_back();
-	}
-
-	bool isbegin = true;
-
-	for (i1 = 0; i1 < silarr.size(); i1++) { // the master program will look for clipstart or clipend, followed by a float representing a timestamp
-		if (isbegin) {
+	for (i1 = 0; i1 < clparr.size(); i1++) { // the master program will look for clipstart or clipend, followed by a float representing a timestamp
+		clparr.at(i1).sd();
+		if (clparr.at(i1).dur >= mclip and clparr.at(i1).end - clparr.at(i1).start >= mclip) {
 			cout << "clipstart: ";
-			isbegin = false;
-			if (logging) {log("clipstart: ");}
-		} else {
+			cout << clparr.at(i1).start << endl;
+			if (logging) {
+				log("clipstart: ");
+				log(to_string(clparr.at(i1).start));
+			}
 			cout << "clipend: ";
-			isbegin = true;
-			if (logging) {log("clipend: ");}
+			cout << clparr.at(i1).end;
+			if (logging) {
+				log("clipend: ");
+				log(to_string(clparr.at(i1).end));
+			}
+			if (not(i1 + 1 == clparr.size())) {cout << endl;}
 		}
-		cout << silarr.at(i1);
-		if (logging) {log(to_string(silarr.at(i1)));}
-		if (not(i1 + 1 == silarr.size())) {cout << endl;}
 	}
 
 	if (logging) {log("end of [sr]");}

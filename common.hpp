@@ -91,3 +91,28 @@ inline void log(string s) {
 		wrtlog.close();
 	}
 }
+
+class clip {
+	public:
+		string extra;
+		float start;
+		float end;
+		float dur;
+		void sd() {dur = end - start;}
+		void merge(const clip &c) {
+			if (start > c.start) {start = c.start;} // if this clips start is further into the video than c.start
+			if (end < c.end) {end = c.end;} // if the clips end is not as far along into the video as c.end
+		}
+		float operator + (const float &f) {return f + dur;}
+		float operator + (const clip &c) {return dur + c.dur;}
+		float operator - (const float &f) {return dur - f;}
+		float operator - (const clip &c) {return dur - c.dur;}
+		bool operator == (const clip &c) {
+			if (start == c.start and end == c.end) {return true;}
+			else {return false;}
+		}
+		bool operator != (const clip &c) {
+			if (start == c.start and end == c.end) {return false;}
+			else {return true;}
+		}
+};

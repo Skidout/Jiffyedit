@@ -1,17 +1,37 @@
-Substitutable New Copyleft Public License
-Version 1.0
+New Copyleft Public License
+Version 1.1
+October 2023
 
-You may not modify this document.
+                                                       Preamble
 
-You may choose to receive this work under this version of this license, or any later version, at your leisure,
-or you may receive this work under the GNU General Public License version 3 or later, at your leisure.
+All common libre licenses at the time of writing this license contain at least one clause restricting the rights of the
+recipient of the work beyond what is required under a copyright law system. These can include, but are not limited to,
+requiring disclosure of source code upon request, requiring a link to the original authors website or page, requiring
+that private keys of tivoized devices be disclosed to user upon request, etc. In fact, I was only able to find one
+license that did not restrict the rights of any recipient without any additional clauses, that being CC-SA 1.0, which
+unfortunately was discontinued after the first version due to lack of demand. This license was created to fill the gap.
+
+The only restrictive clause that is required to protect a recipients rights is that when a work is redistributed, that
+it be redistributed under the same license without any sublicensing. This clause in necessary for everyone who receives
+this work to receive it as libre, otherwise they would not know and assume that they are being provided it as ARR or a
+different license.
+
+In addition to the protections in CC-SA 1.0, this license is also strongly infective. This is so that the rights of
+anyone receiving this work in any capacity are protected. The DNCPL will have this infectivity removed, so it may be
+more suitable for some libraries, though users who receive the work in the capacity of a larger work might not be
+granted the same protections.
+
+                                                 Terms and Conditions
+
+You may distribute unmodified copies of this document.
+You may choose to receive this work under this version of this license, or any later version.
 
 Section 1. Definitions
-	1.(a) "Work" - Any material that can be classified as intellectual property.
+	1.(a) "Work" - Any material that is copyrightable, patentable, or other similar properties.
 
 	1.(b) "You" - The person or legal entity receiving this work.
 
-	1.(c) "Derivative" - Any work which has been translated, trancsribed, compiled, decompiled, converted,
+	1.(c) "Derivitave" - Any work which has been translated, trancsribed, compiled, decompiled, converted,
 	generated or otherwise transformed into a format other than that of the original work.
 
 	1,(d) "Larger work" is defined as a work which does 1.(e), 1.(f), and 1.(g), in any combination of the three.
@@ -23,46 +43,51 @@ Section 1. Definitions
 	1.(g) Dynamically links a work.
 
 Section 2. License Grants
-	2.(a) This license hereby grants you a worldwide, non-exclusive, patent license to excercise the rights
-	listed in section 3, in any combination, or in no combination, provided you meet the requirements listed
-	in section 4.
+
+	2.(a) This license hereby grants you a worldwide, non-exclusive license for this work, to excercise the rights
+	listed in section 3 in any combination, or only one, provided you meet the requirements listed in section 4, as
+	well as, this license provides you a worldwide, non-exclusive license for all copyrights, patents, and other
+	copyright-like properties - e.g. concepts, designs, melodies, bars, algoriths, etc - used in this work to excercise
+	the rights listed in section 3 in any combination, or only one, provided you meet the requirements listed in
+	section 4, regarding these properties as a work.
 
 Section 3.
 
-	3.(a) Modify this work.
+	3.(a) Use this work privately.
 
-	3.(b) Distribute this work.
+	3.(b) Use this work publicly.
 
-	3.(c) Sell this work.
+	3.(c) Modify this work.
 
-	3.(d) Create derivatives of this work.
+	3.(d) Distribute this work.
 
-	3.(e) Include this work a part of a larger work.
+	3.(e) Sell this work.
+
+	3.(f) Create derivatives of this work.
+
+	3.(g) Include this work a part of a larger work.
 
 Section 4. Requirements
 
-	4.(a) If you distribute this work, it must be distributed under this license, with this document alongside.
+	4.(a) If you distribute this work, or a work produced via the excercise of your rights granted in section 3, it must
+	be distributed under this license and include a copy of this document alongside.
 
-	4.(b) If you distribute this work as part of a larger work, the larger work must be made
-	available under this license, with this document alongside except if the larger work is available under
-	any version of the GNU General Public License.
-
-	4.(c) If you distribute a derivative, with or without modification, it must be made available under this
-	license, with this document alongside.
-
-	4.(d) If you distribute a derivative as part of a larger work, with or without modification,
-	the larger work must be made available under this license except if the larger work is available under
-	any version of the GNU General Public License.
+	4.(d) If you distribute this work, or a work produced via the excercise of your rights granted in section 3 as part
+	of a larger work, the larger work must include a copy of this document alongside, and be licensed under this license
+	or any version of the GNU General Public License.
 
 Section 5. Termination
 
-	5.(a) If you are found to be in violation of these terms, you are automatically given 30 days, following a
-	notification via a reasonable medium, to correct the violation before your rights to this work, granted in
-	section 3, are suspended and before any further action can be taken against you.
+	5.(a) If you are found to be in violation of these terms, you are automatically given 30 days following a
+	notification via a reasonable medium to correct the violation before your rights to this work, granted in section 3,
+	are suspended and before any further action can be taken against you.
 
 	5.(b) If it is judged by a relevant court of law that you have been in violation of this license, your rights to
-	this work, granted in section 3, will be suspended for a period of 5 years following the date of the ruling.
+	this work, granted in section 3, are suspended for a period of 5 years following the date of the ruling.
 
-	5.(c) If you take legal action against the original creator or a distributor of this work under any copyright
-	or intellectual property laws, your rights to this work, granted in section 3, are permanently terminated
-	upon the date of filing.
+	5.(c) If you take legal action against the original creator or a distributor of this work under any copyright or
+	copyright-like laws, your rights to this work, granted in section 3, are permanently terminated upon the date of
+	filing.
+
+THIS WORK IS PROVIDED 'AS IS' WITH NO WARRANTY. THE AUTHOR OR DISTRIBUTOR OF THIS WORK SHALL NOT BE LIABLE FOR ANY
+DAMAGE CAUSED DURING USE OF THE WORK TO THE MAXIMUM EXTENT PERMITTED BY LAW.
